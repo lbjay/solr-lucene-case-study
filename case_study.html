@@ -1,0 +1,1258 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="generator" content="AsciiDoc 8.6.6">
+<title>Improving Author Name Indexing &amp; Searching</title>
+<style type="text/css">
+/* Shared CSS for AsciiDoc xhtml11 and html5 backends */
+
+/* Default font. */
+body {
+  font-family: Georgia,serif;
+}
+
+/* Title font. */
+h1, h2, h3, h4, h5, h6,
+div.title, caption.title,
+thead, p.table.header,
+#toctitle,
+#author, #revnumber, #revdate, #revremark,
+#footer {
+  font-family: Arial,Helvetica,sans-serif;
+}
+
+body {
+  margin: 1em 5% 1em 5%;
+}
+
+a {
+  color: blue;
+  text-decoration: underline;
+}
+a:visited {
+  color: fuchsia;
+}
+
+em {
+  font-style: italic;
+  color: navy;
+}
+
+strong {
+  font-weight: bold;
+  color: #083194;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #527bbd;
+  margin-top: 1.2em;
+  margin-bottom: 0.5em;
+  line-height: 1.3;
+}
+
+h1, h2, h3 {
+  border-bottom: 2px solid silver;
+}
+h2 {
+  padding-top: 0.5em;
+}
+h3 {
+  float: left;
+}
+h3 + * {
+  clear: left;
+}
+h5 {
+  font-size: 1.0em;
+}
+
+div.sectionbody {
+  margin-left: 0;
+}
+
+hr {
+  border: 1px solid silver;
+}
+
+p {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+ul, ol, li > p {
+  margin-top: 0;
+}
+ul > li     { color: #aaa; }
+ul > li > * { color: black; }
+
+pre {
+  padding: 0;
+  margin: 0;
+}
+
+#author {
+  color: #527bbd;
+  font-weight: bold;
+  font-size: 1.1em;
+}
+#email {
+}
+#revnumber, #revdate, #revremark {
+}
+
+#footer {
+  font-size: small;
+  border-top: 2px solid silver;
+  padding-top: 0.5em;
+  margin-top: 4.0em;
+}
+#footer-text {
+  float: left;
+  padding-bottom: 0.5em;
+}
+#footer-badges {
+  float: right;
+  padding-bottom: 0.5em;
+}
+
+#preamble {
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+}
+div.imageblock, div.exampleblock, div.verseblock,
+div.quoteblock, div.literalblock, div.listingblock, div.sidebarblock,
+div.admonitionblock {
+  margin-top: 1.0em;
+  margin-bottom: 1.5em;
+}
+div.admonitionblock {
+  margin-top: 2.0em;
+  margin-bottom: 2.0em;
+  margin-right: 10%;
+  color: #606060;
+}
+
+div.content { /* Block element content. */
+  padding: 0;
+}
+
+/* Block element titles. */
+div.title, caption.title {
+  color: #527bbd;
+  font-weight: bold;
+  text-align: left;
+  margin-top: 1.0em;
+  margin-bottom: 0.5em;
+}
+div.title + * {
+  margin-top: 0;
+}
+
+td div.title:first-child {
+  margin-top: 0.0em;
+}
+div.content div.title:first-child {
+  margin-top: 0.0em;
+}
+div.content + div.title {
+  margin-top: 0.0em;
+}
+
+div.sidebarblock > div.content {
+  background: #ffffee;
+  border: 1px solid #dddddd;
+  border-left: 4px solid #f0f0f0;
+  padding: 0.5em;
+}
+
+div.listingblock > div.content {
+  border: 1px solid #dddddd;
+  border-left: 5px solid #f0f0f0;
+  background: #f8f8f8;
+  padding: 0.5em;
+}
+
+div.quoteblock, div.verseblock {
+  padding-left: 1.0em;
+  margin-left: 1.0em;
+  margin-right: 10%;
+  border-left: 5px solid #f0f0f0;
+  color: #777777;
+}
+
+div.quoteblock > div.attribution {
+  padding-top: 0.5em;
+  text-align: right;
+}
+
+div.verseblock > pre.content {
+  font-family: inherit;
+  font-size: inherit;
+}
+div.verseblock > div.attribution {
+  padding-top: 0.75em;
+  text-align: left;
+}
+/* DEPRECATED: Pre version 8.2.7 verse style literal block. */
+div.verseblock + div.attribution {
+  text-align: left;
+}
+
+div.admonitionblock .icon {
+  vertical-align: top;
+  font-size: 1.1em;
+  font-weight: bold;
+  text-decoration: underline;
+  color: #527bbd;
+  padding-right: 0.5em;
+}
+div.admonitionblock td.content {
+  padding-left: 0.5em;
+  border-left: 3px solid #dddddd;
+}
+
+div.exampleblock > div.content {
+  border-left: 3px solid #dddddd;
+  padding-left: 0.5em;
+}
+
+div.imageblock div.content { padding-left: 0; }
+span.image img { border-style: none; }
+a.image:visited { color: white; }
+
+dl {
+  margin-top: 0.8em;
+  margin-bottom: 0.8em;
+}
+dt {
+  margin-top: 0.5em;
+  margin-bottom: 0;
+  font-style: normal;
+  color: navy;
+}
+dd > *:first-child {
+  margin-top: 0.1em;
+}
+
+ul, ol {
+    list-style-position: outside;
+}
+ol.arabic {
+  list-style-type: decimal;
+}
+ol.loweralpha {
+  list-style-type: lower-alpha;
+}
+ol.upperalpha {
+  list-style-type: upper-alpha;
+}
+ol.lowerroman {
+  list-style-type: lower-roman;
+}
+ol.upperroman {
+  list-style-type: upper-roman;
+}
+
+div.compact ul, div.compact ol,
+div.compact p, div.compact p,
+div.compact div, div.compact div {
+  margin-top: 0.1em;
+  margin-bottom: 0.1em;
+}
+
+tfoot {
+  font-weight: bold;
+}
+td > div.verse {
+  white-space: pre;
+}
+
+div.hdlist {
+  margin-top: 0.8em;
+  margin-bottom: 0.8em;
+}
+div.hdlist tr {
+  padding-bottom: 15px;
+}
+dt.hdlist1.strong, td.hdlist1.strong {
+  font-weight: bold;
+}
+td.hdlist1 {
+  vertical-align: top;
+  font-style: normal;
+  padding-right: 0.8em;
+  color: navy;
+}
+td.hdlist2 {
+  vertical-align: top;
+}
+div.hdlist.compact tr {
+  margin: 0;
+  padding-bottom: 0;
+}
+
+.comment {
+  background: yellow;
+}
+
+.footnote, .footnoteref {
+  font-size: 0.8em;
+}
+
+span.footnote, span.footnoteref {
+  vertical-align: super;
+}
+
+#footnotes {
+  margin: 20px 0 20px 0;
+  padding: 7px 0 0 0;
+}
+
+#footnotes div.footnote {
+  margin: 0 0 5px 0;
+}
+
+#footnotes hr {
+  border: none;
+  border-top: 1px solid silver;
+  height: 1px;
+  text-align: left;
+  margin-left: 0;
+  width: 20%;
+  min-width: 100px;
+}
+
+div.colist td {
+  padding-right: 0.5em;
+  padding-bottom: 0.3em;
+  vertical-align: top;
+}
+div.colist td img {
+  margin-top: 0.3em;
+}
+
+@media print {
+  #footer-badges { display: none; }
+}
+
+#toc {
+  margin-bottom: 2.5em;
+}
+
+#toctitle {
+  color: #527bbd;
+  font-size: 1.1em;
+  font-weight: bold;
+  margin-top: 1.0em;
+  margin-bottom: 0.1em;
+}
+
+div.toclevel1, div.toclevel2, div.toclevel3, div.toclevel4 {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+div.toclevel2 {
+  margin-left: 2em;
+  font-size: 0.9em;
+}
+div.toclevel3 {
+  margin-left: 4em;
+  font-size: 0.9em;
+}
+div.toclevel4 {
+  margin-left: 6em;
+  font-size: 0.9em;
+}
+
+span.aqua { color: aqua; }
+span.black { color: black; }
+span.blue { color: blue; }
+span.fuchsia { color: fuchsia; }
+span.gray { color: gray; }
+span.green { color: green; }
+span.lime { color: lime; }
+span.maroon { color: maroon; }
+span.navy { color: navy; }
+span.olive { color: olive; }
+span.purple { color: purple; }
+span.red { color: red; }
+span.silver { color: silver; }
+span.teal { color: teal; }
+span.white { color: white; }
+span.yellow { color: yellow; }
+
+span.aqua-background { background: aqua; }
+span.black-background { background: black; }
+span.blue-background { background: blue; }
+span.fuchsia-background { background: fuchsia; }
+span.gray-background { background: gray; }
+span.green-background { background: green; }
+span.lime-background { background: lime; }
+span.maroon-background { background: maroon; }
+span.navy-background { background: navy; }
+span.olive-background { background: olive; }
+span.purple-background { background: purple; }
+span.red-background { background: red; }
+span.silver-background { background: silver; }
+span.teal-background { background: teal; }
+span.white-background { background: white; }
+span.yellow-background { background: yellow; }
+
+span.big { font-size: 2em; }
+span.small { font-size: 0.6em; }
+
+span.underline { text-decoration: underline; }
+span.overline { text-decoration: overline; }
+span.line-through { text-decoration: line-through; }
+
+
+/*
+ * xhtml11 specific
+ *
+ * */
+
+tt {
+  font-family: monospace;
+  font-size: inherit;
+  color: navy;
+}
+
+div.tableblock {
+  margin-top: 1.0em;
+  margin-bottom: 1.5em;
+}
+div.tableblock > table {
+  border: 3px solid #527bbd;
+}
+thead, p.table.header {
+  font-weight: bold;
+  color: #527bbd;
+}
+p.table {
+  margin-top: 0;
+}
+/* Because the table frame attribute is overriden by CSS in most browsers. */
+div.tableblock > table[frame="void"] {
+  border-style: none;
+}
+div.tableblock > table[frame="hsides"] {
+  border-left-style: none;
+  border-right-style: none;
+}
+div.tableblock > table[frame="vsides"] {
+  border-top-style: none;
+  border-bottom-style: none;
+}
+
+
+/*
+ * html5 specific
+ *
+ * */
+
+.monospaced {
+  font-family: monospace;
+  font-size: inherit;
+  color: navy;
+}
+
+table.tableblock {
+  margin-top: 1.0em;
+  margin-bottom: 1.5em;
+}
+thead, p.tableblock.header {
+  font-weight: bold;
+  color: #527bbd;
+}
+p.tableblock {
+  margin-top: 0;
+}
+table.tableblock {
+  border-width: 3px;
+  border-spacing: 0px;
+  border-style: solid;
+  border-color: #527bbd;
+  border-collapse: collapse;
+}
+th.tableblock, td.tableblock {
+  border-width: 1px;
+  padding: 4px;
+  border-style: solid;
+  border-color: #527bbd;
+}
+
+table.tableblock.frame-topbot {
+  border-left-style: hidden;
+  border-right-style: hidden;
+}
+table.tableblock.frame-sides {
+  border-top-style: hidden;
+  border-bottom-style: hidden;
+}
+table.tableblock.frame-none {
+  border-style: hidden;
+}
+
+th.tableblock.halign-left, td.tableblock.halign-left {
+  text-align: left;
+}
+th.tableblock.halign-center, td.tableblock.halign-center {
+  text-align: center;
+}
+th.tableblock.halign-right, td.tableblock.halign-right {
+  text-align: right;
+}
+
+th.tableblock.valign-top, td.tableblock.valign-top {
+  vertical-align: top;
+}
+th.tableblock.valign-middle, td.tableblock.valign-middle {
+  vertical-align: middle;
+}
+th.tableblock.valign-bottom, td.tableblock.valign-bottom {
+  vertical-align: bottom;
+}
+
+
+/*
+ * manpage specific
+ *
+ * */
+
+body.manpage h1 {
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
+  border-top: 2px solid silver;
+  border-bottom: 2px solid silver;
+}
+body.manpage h2 {
+  border-style: none;
+}
+body.manpage div.sectionbody {
+  margin-left: 3em;
+}
+
+@media print {
+  body.manpage div#toc { display: none; }
+}
+
+
+/*
+ * Theme specific overrides of the preceding (asciidoc.css) CSS.
+ *
+ */
+body {
+  font-family: Garamond, Georgia, serif;
+  font-size: 17px;
+  color: #3E4349;
+  line-height: 1.3em;
+}
+h1, h2, h3, h4, h5, h6,
+div.title, caption.title,
+thead, p.table.header,
+#toctitle,
+#author, #revnumber, #revdate, #revremark,
+#footer {
+  font-family: Garmond, Georgia, serif;
+  font-weight: normal;
+  border-bottom-width: 0;
+  color: #3E4349;
+}
+div.title, caption.title { color: #596673; font-weight: bold; }
+h1 { font-size: 240%; }
+h2 { font-size: 180%; }
+h3 { font-size: 150%; }
+h4 { font-size: 130%; }
+h5 { font-size: 115%; }
+h6 { font-size: 100%; }
+#header h1 { margin-top: 0; }
+#toc {
+  color: #444444;
+  line-height: 1.5;
+  padding-top: 1.5em;
+}
+#toctitle {
+  font-size: 20px;
+}
+#toc a {
+    border-bottom: 1px dotted #999999;
+    color: #444444 !important;
+    text-decoration: none !important;
+}
+#toc a:hover {
+    border-bottom: 1px solid #6D4100;
+    color: #6D4100 !important;
+    text-decoration: none !important;
+}
+div.toclevel1 { margin-top: 0.2em; font-size: 16px; }
+div.toclevel2 { margin-top: 0.15em; font-size: 14px; }
+em, dt, td.hdlist1 { color: black; }
+strong { color: #3E4349; }
+a { color: #004B6B; text-decoration: none; border-bottom: 1px dotted #004B6B; }
+a:visited { color: #615FA0; border-bottom: 1px dotted #615FA0; }
+a:hover { color: #6D4100; border-bottom: 1px solid #6D4100; }
+div.tableblock > table, table.tableblock { border: 3px solid #E8E8E8; }
+th.tableblock, td.tableblock { border: 1px solid #E8E8E8; }
+ul > li > * { color: #3E4349; }
+pre, tt, .monospaced { font-family: Consolas,Menlo,'Deja Vu Sans Mono','Bitstream Vera Sans Mono',monospace; }
+tt, .monospaced { font-size: 0.9em; color: black;
+}
+div.exampleblock > div.content, div.sidebarblock > div.content, div.listingblock > div.content { border-width: 0 0 0 3px; border-color: #E8E8E8; }
+div.verseblock { border-left-width: 0; margin-left: 3em; }
+div.quoteblock { border-left-width: 3px; margin-left: 0; margin-right: 0;}
+div.admonitionblock td.content { border-left: 3px solid #E8E8E8; }
+@media screen {
+  body {
+    max-width: 50em; /* approximately 80 characters wide */
+    margin-left: 16em;
+  }
+
+  #toc {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 13em;
+    padding: 0.5em;
+    padding-bottom: 1.5em;
+    margin: 0;
+    overflow: auto;
+    border-right: 3px solid #f8f8f8;
+    background-color: white;
+  }
+
+  #toc .toclevel1 {
+    margin-top: 0.5em;
+  }
+
+  #toc .toclevel2 {
+    margin-top: 0.25em;
+    display: list-item;
+    color: #aaaaaa;
+  }
+
+  #toctitle {
+    margin-top: 0.5em;
+  }
+}
+</style>
+<script type="text/javascript">
+/*<![CDATA[*/
+var asciidoc = {  // Namespace.
+
+/////////////////////////////////////////////////////////////////////
+// Table Of Contents generator
+/////////////////////////////////////////////////////////////////////
+
+/* Author: Mihai Bazon, September 2002
+ * http://students.infoiasi.ro/~mishoo
+ *
+ * Table Of Content generator
+ * Version: 0.4
+ *
+ * Feel free to use this script under the terms of the GNU General Public
+ * License, as long as you do not remove or alter this notice.
+ */
+
+ /* modified by Troy D. Hanson, September 2006. License: GPL */
+ /* modified by Stuart Rackham, 2006, 2009. License: GPL */
+
+// toclevels = 1..4.
+toc: function (toclevels) {
+
+  function getText(el) {
+    var text = "";
+    for (var i = el.firstChild; i != null; i = i.nextSibling) {
+      if (i.nodeType == 3 /* Node.TEXT_NODE */) // IE doesn't speak constants.
+        text += i.data;
+      else if (i.firstChild != null)
+        text += getText(i);
+    }
+    return text;
+  }
+
+  function TocEntry(el, text, toclevel) {
+    this.element = el;
+    this.text = text;
+    this.toclevel = toclevel;
+  }
+
+  function tocEntries(el, toclevels) {
+    var result = new Array;
+    var re = new RegExp('[hH]([2-'+(toclevels+1)+'])');
+    // Function that scans the DOM tree for header elements (the DOM2
+    // nodeIterator API would be a better technique but not supported by all
+    // browsers).
+    var iterate = function (el) {
+      for (var i = el.firstChild; i != null; i = i.nextSibling) {
+        if (i.nodeType == 1 /* Node.ELEMENT_NODE */) {
+          var mo = re.exec(i.tagName);
+          if (mo && (i.getAttribute("class") || i.getAttribute("className")) != "float") {
+            result[result.length] = new TocEntry(i, getText(i), mo[1]-1);
+          }
+          iterate(i);
+        }
+      }
+    }
+    iterate(el);
+    return result;
+  }
+
+  var toc = document.getElementById("toc");
+  if (!toc) {
+    return;
+  }
+
+  // Delete existing TOC entries in case we're reloading the TOC.
+  var tocEntriesToRemove = [];
+  var i;
+  for (i = 0; i < toc.childNodes.length; i++) {
+    var entry = toc.childNodes[i];
+    if (entry.nodeName == 'div'
+     && entry.getAttribute("class")
+     && entry.getAttribute("class").match(/^toclevel/))
+      tocEntriesToRemove.push(entry);
+  }
+  for (i = 0; i < tocEntriesToRemove.length; i++) {
+    toc.removeChild(tocEntriesToRemove[i]);
+  }
+
+  // Rebuild TOC entries.
+  var entries = tocEntries(document.getElementById("content"), toclevels);
+  for (var i = 0; i < entries.length; ++i) {
+    var entry = entries[i];
+    if (entry.element.id == "")
+      entry.element.id = "_toc_" + i;
+    var a = document.createElement("a");
+    a.href = "#" + entry.element.id;
+    a.appendChild(document.createTextNode(entry.text));
+    var div = document.createElement("div");
+    div.appendChild(a);
+    div.className = "toclevel" + entry.toclevel;
+    toc.appendChild(div);
+  }
+  if (entries.length == 0)
+    toc.parentNode.removeChild(toc);
+},
+
+
+/////////////////////////////////////////////////////////////////////
+// Footnotes generator
+/////////////////////////////////////////////////////////////////////
+
+/* Based on footnote generation code from:
+ * http://www.brandspankingnew.net/archive/2005/07/format_footnote.html
+ */
+
+footnotes: function () {
+  // Delete existing footnote entries in case we're reloading the footnodes.
+  var i;
+  var noteholder = document.getElementById("footnotes");
+  if (!noteholder) {
+    return;
+  }
+  var entriesToRemove = [];
+  for (i = 0; i < noteholder.childNodes.length; i++) {
+    var entry = noteholder.childNodes[i];
+    if (entry.nodeName == 'div' && entry.getAttribute("class") == "footnote")
+      entriesToRemove.push(entry);
+  }
+  for (i = 0; i < entriesToRemove.length; i++) {
+    noteholder.removeChild(entriesToRemove[i]);
+  }
+
+  // Rebuild footnote entries.
+  var cont = document.getElementById("content");
+  var spans = cont.getElementsByTagName("span");
+  var refs = {};
+  var n = 0;
+  for (i=0; i<spans.length; i++) {
+    if (spans[i].className == "footnote") {
+      n++;
+      var note = spans[i].getAttribute("data-note");
+      if (!note) {
+        // Use [\s\S] in place of . so multi-line matches work.
+        // Because JavaScript has no s (dotall) regex flag.
+        note = spans[i].innerHTML.match(/\s*\[([\s\S]*)]\s*/)[1];
+        spans[i].innerHTML =
+          "[<a id='_footnoteref_" + n + "' href='#_footnote_" + n +
+          "' title='View footnote' class='footnote'>" + n + "</a>]";
+        spans[i].setAttribute("data-note", note);
+      }
+      noteholder.innerHTML +=
+        "<div class='footnote' id='_footnote_" + n + "'>" +
+        "<a href='#_footnoteref_" + n + "' title='Return to text'>" +
+        n + "</a>. " + note + "</div>";
+      var id =spans[i].getAttribute("id");
+      if (id != null) refs["#"+id] = n;
+    }
+  }
+  if (n == 0)
+    noteholder.parentNode.removeChild(noteholder);
+  else {
+    // Process footnoterefs.
+    for (i=0; i<spans.length; i++) {
+      if (spans[i].className == "footnoteref") {
+        var href = spans[i].getElementsByTagName("a")[0].getAttribute("href");
+        href = href.match(/#.*/)[0];  // Because IE return full URL.
+        n = refs[href];
+        spans[i].innerHTML =
+          "[<a href='#_footnote_" + n +
+          "' title='View footnote' class='footnote'>" + n + "</a>]";
+      }
+    }
+  }
+},
+
+install: function(toclevels) {
+  var timerId;
+
+  function reinstall() {
+    asciidoc.footnotes();
+    if (toclevels) {
+      asciidoc.toc(toclevels);
+    }
+  }
+
+  function reinstallAndRemoveTimer() {
+    clearInterval(timerId);
+    reinstall();
+  }
+
+  timerId = setInterval(reinstall, 500);
+  if (document.addEventListener)
+    document.addEventListener("DOMContentLoaded", reinstallAndRemoveTimer, false);
+  else
+    window.onload = reinstallAndRemoveTimer;
+}
+
+}
+asciidoc.install(2);
+/*]]>*/
+</script>
+</head>
+<body class="book">
+<div id="header">
+<h1>Improving Author Name Indexing &amp; Searching</h1>
+<div id="toc">
+  <div id="toctitle">Table of Contents</div>
+  <noscript><p><b>JavaScript must be enabled in your browser to display the table of contents.</b></p></noscript>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph"><p><em>by Roman Chyla and Jay Luker</em>
+SAO/NASA Astrophysics Data System (ADS)</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_intro">Intro</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>Searching by an author name is a very common use of the ADS. Somewhere around 50% of all searches, and around 70% of queries coming from our "advanced search" input form, include an author name. The ADS is by no means unique; searching by author is a very common use case for any system that contains information related to people. Even so, the solutions are not as well known as one might think.</p></div>
+<div class="paragraph"><p>Searching by author has always been possible via the ADS, but due to the poor quality of much of the metadata that we index, not as powerful or accurate as we would like. For instance, because we historically normalized everything to ASCII at both index- and query-time, our legacy search engine is unable to make a distinction between a search for "Müller, H" vs "Muller, H", even though these might actually identify two different authors.</p></div>
+<div class="paragraph"><p>When we began designing our new Solr/Lucene-based system (currently in alpha release) we decided early in the planning process to try and do things the "right way" going forward. That meant no more discarding information during indexing by downgrading author names to ASCII or shortening first names to initials. The idea would be to still provide a default search that favored recall, therefore a search for "Müller, H" would still return articles authored by "Muller, H"--and even "Mueller, H"--but to also ensure that we allowed for an "exact match" search option.</p></div>
+<div class="paragraph"><p>We challenged ourselves to address as many edge cases as possible. This meant extending the improved author handling to use cases involving an extensive list of author synonyms that is hand-curated by the ADS team. This list includes synonyms for common mis-spellings as well as cases where an author has changed the name under which he or she publishes (e.g., wives taking their husband&#8217;s last name).</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_requirements_overview">Requirements Overview</h2>
+<div class="sectionbody">
+<div class="ulist"><ul>
+<li>
+<p>
+Allow simplified (ascii) user input to match non-ascii "equivalents". Example: a user searching for "Muller, H" should get hits for "Müller, H".
+</p>
+</li>
+<li>
+<p>
+Allow non-ascii user input to match legacy metadata. Inverse of above.
+</p>
+</li>
+<li>
+<p>
+Allow matches between information-rich input and information-poor metadata. Example: a search for "Ortiz, David" must match documents indexed with "Ortiz, D".
+</p>
+</li>
+<li>
+<p>
+And vice-versa. Example: a search for "Ortiz, D" should match documents indexed as "Ortiz, David" (as well as "Ortiz, Diana", "Ortiz, Dagoberto", etc.)
+</p>
+</li>
+<li>
+<p>
+Search input, once truncated, cannot be expanded again. In other words, truncated input can only be used for exact matching, never as a prefix. Example: a search for "Ortiz, David" may be truncated to find articles by "Ortiz, D", but not then expanded to match "Ortiz, Diana".
+</p>
+</li>
+<li>
+<p>
+Allow the above rules to interact seamlessly with a set of hand-curated author name synonyms
+</p>
+</li>
+</ul></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_solution">Solution</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>Our solution in a nutshell involves indexing the author names as close to the original metadata as possible, and then expanding query input according to a set of rules to maximize the chance of matching the actual indexed values. The query expansion is done using a combination of two approaches that we refer to as "transliteration" and "name variation".</p></div>
+<div class="paragraph"><p>The actual implementation takes the form of multiple fieldType definitions that contain several custom tokenizers. We tried as much as possible to use a "divide and conquer" approach to the analyzer components, and this paid off during development as requirements and edge cases revealed themselves.</p></div>
+<div class="sect2">
+<h3 id="_transliteration">Transliteration</h3>
+<div class="paragraph"><div class="title">Transliteration Example</div><p>image::images/translit_ex.png</p></div>
+<div class="paragraph"><p>This image shows a basic example of what we call "transliterations", the practice of substituting ascii translations of common, non-ascii, unicode characters. It illustrates how an author search for any of "Muller", "Mueller" or "Müller" will find documents authored by any of "Muller", "Mueller" or "Müller". We accomplish this by expanding the user&#8217;s original query to include the transliterated equivalents:</p></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>author:"Muller, H"</pre>
+</div></div>
+<div class="paragraph"><p>becomes&#8230;</p></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>(author:"Muller, H" OR author:"Mueller, H" OR author:"Müller, H")</pre>
+</div></div>
+<div class="paragraph"><p>It&#8217;s important to point out that this goes beyond simply downgrading to ASCII. Yes, a search for "Müller still gets downgraded to "Muller", but the inverse is also true: "Muller" will get <em>upgraded</em> to "Müller". This is much more complicated than simply translating every occurrance of "ü|u|ue", "ä|a|ae" and "č|c|ch". To selectively apply these transliaterations you have to let the actual corpus of indexed metadata tell you which names are to be upgraded, and that has to happen as part of the indexing process.</p></div>
+</div>
+<div class="sect2">
+<h3 id="_name_combinations">Name Combinations</h3>
+<div class="paragraph"><p>The term "name combinations" refers to our practice of generating multilpe varaitions of an author name based upon the available information contained within the string. It involves splitting the name into its component parts&#8212;first, last, middle, initials, etc.--and then re-combining the parts according to a set of rules. First and middle names will be shorted to initials in some combinations. Others will include wildcards ("<strong>"), or even regular expression syntax ("\b.</strong>"), so that the resulting token acts as a PrefixQuery or RegexpQuery, respectively.</p></div>
+<div class="paragraph"><p>For example, the input string "Ortiz, David A" will result in the following combinations:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Ortiz,
+</p>
+</li>
+<li>
+<p>
+Ortiz, D
+</p>
+</li>
+<li>
+<p>
+Ortiz, David
+</p>
+</li>
+<li>
+<p>
+Ortiz, D A*
+</p>
+</li>
+<li>
+<p>
+Ortiz, David A*
+</p>
+</li>
+</ul></div>
+<div class="imageblock">
+<div class="content">
+<img src="images/name_combinations_ex.png" alt="images/name_combinations_ex.png">
+</div>
+<div class="title">Figure 1. Name Combination Example</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_index_analysis">Index Analysis</h3>
+<div class="paragraph"><p>Index analysis of the author names is minimal. The only non-standard filter in use is the AuthorNormalizeFilterFactory. It&#8217;s responsible for trimming some punctuation and whitespace. Tokens are also lowercased and de-duped, but otherwise the author metadata is indexed "as is".</p></div>
+<div class="listingblock">
+<div class="title">The "author" fieldType Index Analyzer</div>
+<div class="content"><!-- Generator: GNU source-highlight 3.1.5
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt><span style="font-weight: bold"><span style="color: #0000FF">&lt;fieldType</span></span> <span style="color: #009900">name</span><span style="color: #990000">=</span><span style="color: #FF0000">"author"</span> <span style="color: #009900">class</span><span style="color: #990000">=</span><span style="color: #FF0000">"solr.TextField"</span> <span style="color: #009900">positionIncrementGap</span><span style="color: #990000">=</span><span style="color: #FF0000">"100"</span><span style="font-weight: bold"><span style="color: #0000FF">&gt;</span></span>
+    <span style="font-weight: bold"><span style="color: #0000FF">&lt;analyzer</span></span> <span style="color: #009900">type</span><span style="color: #990000">=</span><span style="color: #FF0000">"index"</span><span style="font-weight: bold"><span style="color: #0000FF">&gt;</span></span>
+        <span style="font-weight: bold"><span style="color: #0000FF">&lt;tokenizer</span></span> <span style="color: #009900">class</span><span style="color: #990000">=</span><span style="color: #FF0000">"solr.KeywordTokenizerFactory"</span> <span style="font-weight: bold"><span style="color: #0000FF">/&gt;</span></span>
+        <span style="font-weight: bold"><span style="color: #0000FF">&lt;filter</span></span> <span style="color: #009900">class</span><span style="color: #990000">=</span><span style="color: #FF0000">"custom.AuthorNormalizeFilterFactory"</span> <span style="font-weight: bold"><span style="color: #0000FF">/&gt;</span></span>
+        <span style="font-weight: bold"><span style="color: #0000FF">&lt;filter</span></span> <span style="color: #009900">class</span><span style="color: #990000">=</span><span style="color: #FF0000">"solr.LowerCaseFilterFactory"</span> <span style="font-weight: bold"><span style="color: #0000FF">/&gt;</span></span>
+        <span style="font-weight: bold"><span style="color: #0000FF">&lt;filter</span></span> <span style="color: #009900">class</span><span style="color: #990000">=</span><span style="color: #FF0000">"oal.analysis.miscellaneous.RemoveDuplicatesTokenFilterFactory"</span> <span style="font-weight: bold"><span style="color: #0000FF">/&gt;</span></span>
+    <span style="font-weight: bold"><span style="color: #0000FF">&lt;/analyzer&gt;</span></span>
+    ...</tt></pre></div></div>
+<div class="paragraph"><p>Pretty boring? Well, we&#8217;re not done yet. There is an important 2nd step in the indexing process.</p></div>
+<div class="paragraph"><p>Following a bulk re-indexing, a separate Solr handler, <em>/dump-index</em>, is called. This handler triggers a "dump" of the indexed author values. As the indexed author name values are extracted they are fed back into Solr, as <strong>queries</strong>, to a special "author_collector" field. This field&#8217;s query analysis chain performs the transliterations on the input tokens and writes the expanded output to a file which can then be used as the source of a SynonymFilterFactory in the query Analyzer.</p></div>
+<div class="listingblock">
+<div class="title">The "author_collector" fieldType</div>
+<div class="content"><!-- Generator: GNU source-highlight 3.1.5
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt>    <span style="font-weight: bold"><span style="color: #0000FF">&lt;fieldType</span></span> <span style="color: #009900">name</span><span style="color: #990000">=</span><span style="color: #FF0000">"author_collector"</span> <span style="color: #009900">class</span><span style="color: #990000">=</span><span style="color: #FF0000">"solr.TextField"</span>
+        <span style="color: #009900">positionIncrementGap</span><span style="color: #990000">=</span><span style="color: #FF0000">"100"</span><span style="font-weight: bold"><span style="color: #0000FF">&gt;</span></span>
+        <span style="font-weight: bold"><span style="color: #0000FF">&lt;analyzer</span></span> <span style="color: #009900">type</span><span style="color: #990000">=</span><span style="color: #FF0000">"query"</span><span style="font-weight: bold"><span style="color: #0000FF">&gt;</span></span> <span style="font-style: italic"><span style="color: #9A1900">&lt;!-- must be query type! --&gt;</span></span>
+            <span style="font-weight: bold"><span style="color: #0000FF">&lt;tokenizer</span></span> <span style="color: #009900">class</span><span style="color: #990000">=</span><span style="color: #FF0000">"solr.KeywordTokenizerFactory"</span> <span style="font-weight: bold"><span style="color: #0000FF">/&gt;</span></span>
+            <span style="font-weight: bold"><span style="color: #0000FF">&lt;filter</span></span> <span style="color: #009900">class</span><span style="color: #990000">=</span><span style="color: #FF0000">"solr.analysis.author.AuthorNormalizeFilterFactory"</span> <span style="font-weight: bold"><span style="color: #0000FF">/&gt;</span></span>
+            <span style="font-weight: bold"><span style="color: #0000FF">&lt;filter</span></span> <span style="color: #009900">class</span><span style="color: #990000">=</span><span style="color: #FF0000">"solr.analysis.author.AuthorTransliterationFactory"</span> <span style="font-weight: bold"><span style="color: #0000FF">/&gt;</span></span>
+            <span style="font-weight: bold"><span style="color: #0000FF">&lt;filter</span></span> <span style="color: #009900">class</span><span style="color: #990000">=</span><span style="color: #FF0000">"solr.analysis.author.AuthorCollectorFactory"</span>
+                <span style="color: #009900">outFile</span><span style="color: #990000">=</span><span style="color: #FF0000">"author_generated.translit"</span> <span style="color: #009900">tokenTypes</span><span style="color: #990000">=</span><span style="color: #FF0000">"AUTHOR_TRANSLITERATED"</span>
+                <span style="color: #009900">emitTokens</span><span style="color: #990000">=</span><span style="color: #FF0000">"false"</span> <span style="font-weight: bold"><span style="color: #0000FF">/&gt;</span></span>
+        <span style="font-weight: bold"><span style="color: #0000FF">&lt;/analyzer&gt;</span></span>
+    <span style="font-weight: bold"><span style="color: #0000FF">&lt;/fieldType&gt;</span></span></tt></pre></div></div>
+<div class="listingblock">
+<div class="title">AuthorTransliterationFilter</div>
+<div class="content"><!-- Generator: GNU source-highlight 3.1.5
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt>  <span style="color: #990000">...</span>
+  @Override
+  <span style="font-weight: bold"><span style="color: #0000FF">public</span></span> <span style="color: #009900">boolean</span> <span style="font-weight: bold"><span style="color: #000000">incrementToken</span></span><span style="color: #990000">()</span> <span style="font-weight: bold"><span style="color: #0000FF">throws</span></span> IOException <span style="color: #FF0000">{</span>
+
+    <span style="font-weight: bold"><span style="color: #0000FF">if</span></span> <span style="color: #990000">(</span><span style="font-weight: bold"><span style="color: #0000FF">this</span></span><span style="color: #990000">.</span>transliterationStack<span style="color: #990000">.</span><span style="font-weight: bold"><span style="color: #000000">size</span></span><span style="color: #990000">()</span> <span style="color: #990000">&gt;</span> <span style="color: #993399">0</span><span style="color: #990000">)</span> <span style="color: #FF0000">{</span>
+      <span style="color: #008080">String</span> syn <span style="color: #990000">=</span> <span style="font-weight: bold"><span style="color: #0000FF">this</span></span><span style="color: #990000">.</span>transliterationStack<span style="color: #990000">.</span><span style="font-weight: bold"><span style="color: #000000">pop</span></span><span style="color: #990000">();</span>
+      <span style="font-weight: bold"><span style="color: #0000FF">this</span></span><span style="color: #990000">.</span><span style="font-weight: bold"><span style="color: #000000">restoreState</span></span><span style="color: #990000">(</span><span style="font-weight: bold"><span style="color: #0000FF">this</span></span><span style="color: #990000">.</span>current<span style="color: #990000">);</span>
+      <span style="font-weight: bold"><span style="color: #0000FF">this</span></span><span style="color: #990000">.</span>termAtt<span style="color: #990000">.</span><span style="font-weight: bold"><span style="color: #000000">setEmpty</span></span><span style="color: #990000">();</span>
+      <span style="font-weight: bold"><span style="color: #0000FF">this</span></span><span style="color: #990000">.</span>termAtt<span style="color: #990000">.</span><span style="font-weight: bold"><span style="color: #000000">append</span></span><span style="color: #990000">(</span>syn<span style="color: #990000">);</span>
+      <span style="font-weight: bold"><span style="color: #0000FF">this</span></span><span style="color: #990000">.</span>posIncrAtt<span style="color: #990000">.</span><span style="font-weight: bold"><span style="color: #000000">setPositionIncrement</span></span><span style="color: #990000">(</span><span style="color: #993399">0</span><span style="color: #990000">);</span>
+      <span style="font-weight: bold"><span style="color: #0000FF">this</span></span><span style="color: #990000">.</span>typeAtt<span style="color: #990000">.</span><span style="font-weight: bold"><span style="color: #000000">setType</span></span><span style="color: #990000">(</span>AuthorUtils<span style="color: #990000">.</span>AUTHOR_TRANSLITERATED<span style="color: #990000">);</span> <span style="font-style: italic"><span style="color: #9A1900">// &lt;-- type the AuthorCollectorFilter looks for</span></span>
+      <span style="font-weight: bold"><span style="color: #0000FF">return</span></span> <span style="font-weight: bold"><span style="color: #0000FF">true</span></span><span style="color: #990000">;</span>
+    <span style="color: #FF0000">}</span>
+
+    <span style="font-weight: bold"><span style="color: #0000FF">if</span></span> <span style="color: #990000">(!</span>input<span style="color: #990000">.</span><span style="font-weight: bold"><span style="color: #000000">incrementToken</span></span><span style="color: #990000">())</span> <span style="font-weight: bold"><span style="color: #0000FF">return</span></span> <span style="font-weight: bold"><span style="color: #0000FF">false</span></span><span style="color: #990000">;</span>
+
+    <span style="font-weight: bold"><span style="color: #0000FF">if</span></span> <span style="color: #990000">(</span>tokenType <span style="color: #990000">==</span> <span style="font-weight: bold"><span style="color: #0000FF">null</span></span> <span style="color: #990000">&amp;&amp;</span> <span style="font-weight: bold"><span style="color: #0000FF">this</span></span><span style="color: #990000">.</span><span style="font-weight: bold"><span style="color: #000000">genVariants</span></span><span style="color: #990000">())</span> <span style="color: #FF0000">{</span> <span style="font-style: italic"><span style="color: #9A1900">// null means process all tokens</span></span>
+      <span style="font-weight: bold"><span style="color: #0000FF">this</span></span><span style="color: #990000">.</span>current <span style="color: #990000">=</span> <span style="font-weight: bold"><span style="color: #000000">captureState</span></span><span style="color: #990000">();</span>
+    <span style="color: #FF0000">}</span>
+    <span style="font-weight: bold"><span style="color: #0000FF">else</span></span> <span style="font-weight: bold"><span style="color: #0000FF">if</span></span> <span style="color: #990000">(</span>typeAtt<span style="color: #990000">.</span><span style="font-weight: bold"><span style="color: #000000">type</span></span><span style="color: #990000">().</span><span style="font-weight: bold"><span style="color: #000000">equals</span></span><span style="color: #990000">(</span>tokenType<span style="color: #990000">)</span> <span style="color: #990000">&amp;&amp;</span> <span style="font-weight: bold"><span style="color: #0000FF">this</span></span><span style="color: #990000">.</span><span style="font-weight: bold"><span style="color: #000000">genVariants</span></span><span style="color: #990000">())</span> <span style="color: #FF0000">{</span>
+      <span style="font-weight: bold"><span style="color: #0000FF">this</span></span><span style="color: #990000">.</span>current <span style="color: #990000">=</span> <span style="font-weight: bold"><span style="color: #0000FF">this</span></span><span style="color: #990000">.</span><span style="font-weight: bold"><span style="color: #000000">captureState</span></span><span style="color: #990000">();</span>
+    <span style="color: #FF0000">}</span>
+
+    <span style="font-weight: bold"><span style="color: #0000FF">return</span></span> <span style="font-weight: bold"><span style="color: #0000FF">true</span></span><span style="color: #990000">;</span>
+  <span style="color: #FF0000">}</span>
+
+  <span style="font-weight: bold"><span style="color: #0000FF">private</span></span> <span style="color: #009900">boolean</span> <span style="font-weight: bold"><span style="color: #000000">genVariants</span></span><span style="color: #990000">()</span> <span style="color: #FF0000">{</span>
+    <span style="font-style: italic"><span style="color: #9A1900">// "Müller, Herman" -&gt; ["Müller, Herman", "Muller, Herman", "Mueller, Herman"]</span></span>
+    <span style="color: #008080">ArrayList&lt;String&gt;</span> translit <span style="color: #990000">=</span> AuthorUtils<span style="color: #990000">.</span><span style="font-weight: bold"><span style="color: #000000">getAsciiTransliteratedVariants</span></span><span style="color: #990000">(</span>termAtt<span style="color: #990000">.</span><span style="font-weight: bold"><span style="color: #000000">toString</span></span><span style="color: #990000">());</span>
+    <span style="font-weight: bold"><span style="color: #0000FF">if</span></span> <span style="color: #990000">(</span>translit<span style="color: #990000">.</span><span style="font-weight: bold"><span style="color: #000000">size</span></span><span style="color: #990000">()</span> <span style="color: #990000">&gt;</span> <span style="color: #993399">0</span><span style="color: #990000">)</span> <span style="color: #FF0000">{</span>
+      transliterationStack<span style="color: #990000">.</span><span style="font-weight: bold"><span style="color: #000000">addAll</span></span><span style="color: #990000">(</span>translit<span style="color: #990000">);</span>
+      <span style="font-weight: bold"><span style="color: #0000FF">return</span></span> <span style="font-weight: bold"><span style="color: #0000FF">true</span></span><span style="color: #990000">;</span>
+    <span style="color: #FF0000">}</span>
+    <span style="font-weight: bold"><span style="color: #0000FF">return</span></span> <span style="font-weight: bold"><span style="color: #0000FF">false</span></span><span style="color: #990000">;</span>
+  <span style="color: #FF0000">}</span></tt></pre></div></div>
+<div class="paragraph"><p>To summarize the above code samples, the AuthorTransliterationFilter is accepting incoming author name tokens, generating their transliterated variants, and then adding those variants onto the token stream as a specific token type, AUTHOR_TRANSLITERATED. The AuthorCollectorFilter then collects these variants in a buffer and eventually persists them to a file called "author_variations.translit" which will be used as a source of synonyms at query-time.</p></div>
+<div class="paragraph"><p>There is a downside to this workflow: because the synonym file being written to, "author_generated.translit", is being used by the live Solr instance, a core reload is required for any term changes to take effect.</p></div>
+<div class="paragraph"><p>We tend to do regular complete re-indexing of our entire 10 million document collection, but this dump/collect workflow could also be independently scheduled on a regular basis to handle incremental index updates.</p></div>
+<div class="imageblock">
+<div class="content">
+<img src="images/index_analysis_chain.png" alt="images/index_analysis_chain.png">
+</div>
+<div class="title">Figure 2. Index Analyzer</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_query_analysis">Query Analysis</h3>
+<div class="paragraph"><p>As mentioned previously, we took a "divide and conquer" approach that attempted to make the division of labor between the token filters as granular as possible. While the result may seem overly convoluted, it allowed us the flexibility we needed to define additional fieldTypes with slightly modified tokenizer chains. More on that later.</p></div>
+<div class="listingblock">
+<div class="title">Query Analyzer</div>
+<div class="content"><!-- Generator: GNU source-highlight 3.1.5
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt>    <span style="font-weight: bold"><span style="color: #0000FF">&lt;analyzer</span></span> <span style="color: #009900">type</span><span style="color: #990000">=</span><span style="color: #FF0000">"query"</span><span style="font-weight: bold"><span style="color: #0000FF">&gt;</span></span>
+        <span style="font-weight: bold"><span style="color: #0000FF">&lt;tokenizer</span></span> <span style="color: #009900">class</span><span style="color: #990000">=</span><span style="color: #FF0000">"solr.KeywordTokenizerFactory"</span> <span style="font-weight: bold"><span style="color: #0000FF">/&gt;</span></span>
+
+        <span style="font-style: italic"><span style="color: #9A1900">&lt;!-- normalize order and surname form: eg. "adamcuk" becomes "adamcuk,"</span></span>
+<span style="font-style: italic"><span style="color: #9A1900">            and "adamczuk, k" becomes "adamczuk, k" --&gt;</span></span>
+        <span style="font-weight: bold"><span style="color: #0000FF">&lt;filter</span></span> <span style="color: #009900">class</span><span style="color: #990000">=</span><span style="color: #FF0000">"custom.AuthorNormalizeFilterFactory"</span> <span style="font-weight: bold"><span style="color: #0000FF">/&gt;</span></span>
+
+        <span style="font-style: italic"><span style="color: #9A1900">&lt;!-- generate name combinations --&gt;</span></span>
+        <span style="font-weight: bold"><span style="color: #0000FF">&lt;filter</span></span> <span style="color: #009900">class</span><span style="color: #990000">=</span><span style="color: #FF0000">"custom.AuthorCreateQueryVariationsFilterFactory"</span> <span style="color: #009900">minNameParts</span><span style="color: #990000">=</span><span style="color: #FF0000">"1"</span> <span style="font-weight: bold"><span style="color: #0000FF">/&gt;</span></span>
+
+        <span style="font-style: italic"><span style="color: #9A1900">&lt;!-- replace with transliterated variant(s) --&gt;</span></span>
+        <span style="font-weight: bold"><span style="color: #0000FF">&lt;filter</span></span> <span style="color: #009900">class</span><span style="color: #990000">=</span><span style="color: #FF0000">"solr.SynonymFilterFactory"</span> <span style="color: #009900">synonyms</span><span style="color: #990000">=</span><span style="color: #FF0000">"author_generated.translit"</span>
+            <span style="color: #009900">ignoreCase</span><span style="color: #990000">=</span><span style="color: #FF0000">"true"</span> <span style="color: #009900">expand</span><span style="color: #990000">=</span><span style="color: #FF0000">"true"</span> <span style="color: #009900">tokenizerFactory</span><span style="color: #990000">=</span><span style="color: #FF0000">"solr.KeywordTokenizerFactory"</span> <span style="font-weight: bold"><span style="color: #0000FF">/&gt;</span></span>
+
+        <span style="font-style: italic"><span style="color: #9A1900">&lt;!-- run transliteration again to ensure original query input gets up-/down-graded --&gt;</span></span>
+        <span style="font-weight: bold"><span style="color: #0000FF">&lt;filter</span></span> <span style="color: #009900">class</span><span style="color: #990000">=</span><span style="color: #FF0000">"custom.AuthorTransliterationFactory"</span> <span style="color: #009900">inputType</span><span style="color: #990000">=</span><span style="color: #FF0000">"null"</span> <span style="font-weight: bold"><span style="color: #0000FF">/&gt;</span></span>
+
+        <span style="font-style: italic"><span style="color: #9A1900">&lt;!-- generate name combinations again --&gt;</span></span>
+        <span style="font-weight: bold"><span style="color: #0000FF">&lt;filter</span></span> <span style="color: #009900">class</span><span style="color: #990000">=</span><span style="color: #FF0000">"custom.AuthorCreateQueryVariationsFilterFactory"</span> <span style="color: #009900">minNameParts</span><span style="color: #990000">=</span><span style="color: #FF0000">"1"</span> <span style="font-weight: bold"><span style="color: #0000FF">/&gt;</span></span>
+
+        <span style="font-style: italic"><span style="color: #9A1900">&lt;!-- expand using the hand-curated synonym list --&gt;</span></span>
+        <span style="font-weight: bold"><span style="color: #0000FF">&lt;filter</span></span> <span style="color: #009900">class</span><span style="color: #990000">=</span><span style="color: #FF0000">"solr.SynonymFilterFactory"</span> <span style="color: #009900">synonyms</span><span style="color: #990000">=</span><span style="color: #FF0000">"author_curated.synonyms"</span>
+            <span style="color: #009900">ignoreCase</span><span style="color: #990000">=</span><span style="color: #FF0000">"true"</span> <span style="color: #009900">expand</span><span style="color: #990000">=</span><span style="color: #FF0000">"true"</span> <span style="color: #009900">tokenizerFactory</span><span style="color: #990000">=</span><span style="color: #FF0000">"solr.KeywordTokenizerFactory"</span> <span style="font-weight: bold"><span style="color: #0000FF">/&gt;</span></span>
+
+        <span style="font-style: italic"><span style="color: #9A1900">&lt;!-- more transliteration to catch new tokens from the hand-curated synonyms</span></span>
+<span style="font-style: italic"><span style="color: #9A1900">        &lt;filter class="custom.AuthorTransliterationFactory" inputType="SYNONYM" /&gt;</span></span>
+
+<span style="font-style: italic"><span style="color: #9A1900">        &lt;!-- lowercase normalize everything --&gt;</span></span>
+<span style="font-style: italic"><span style="color: #9A1900">        &lt;filter class="solr.LowerCaseFilterFactory" /&gt;</span></span>
+
+<span style="font-style: italic"><span style="color: #9A1900">        &lt;!-- reset posIncrement because somtimes synonym expansion causes position bumps;</span></span>
+<span style="font-style: italic"><span style="color: #9A1900">            range="1,100" ensures that we skip the first token --&gt;</span></span>
+<span style="font-style: italic"><span style="color: #9A1900">        &lt;filter class="solr.analysis.ResetFilterFactory" posIncrement="0" range="1,100" /&gt;</span></span>
+
+<span style="font-style: italic"><span style="color: #9A1900">        &lt;!-- one last name combination run to handle possible hand-curated synonyms</span></span>
+<span style="font-style: italic"><span style="color: #9A1900">        &lt;filter class="custom.AuthorCreateQueryVariationsFilterFactory"</span></span>
+<span style="font-style: italic"><span style="color: #9A1900">            minNameParts="1" plainSurname="true" addShortenedMultiName="true"</span></span>
+<span style="font-style: italic"><span style="color: #9A1900">            addWildcards="false" lookAtPayloadForOrigAuthor="false" /&gt;</span></span>
+
+<span style="font-style: italic"><span style="color: #9A1900">        &lt;!-- deal with multiple occurences of the same (can happen because of the overlapping synonyms) --&gt;</span></span>
+<span style="font-style: italic"><span style="color: #9A1900">        &lt;filter class="oal.analysis.miscellaneous.RemoveDuplicatesTokenFilterFactory" /&gt;</span></span>
+
+<span style="font-style: italic"><span style="color: #9A1900">    &lt;/analyzer&gt;</span></span>
+<span style="font-style: italic"><span style="color: #9A1900">&lt;/fieldType&gt;</span></span></tt></pre></div></div>
+<div class="paragraph"><p>Let&#8217;s step through the operations one-by-one. At each step the goal is to continue expanding the query input to maximize the chance of matching either entries in the two synonym lists, or eventually the index itself.</p></div>
+<div class="olist arabic"><ol class="arabic">
+<li>
+<p>
+KeywordTokenizer - here, as before in the index analyzer, we use the KeywordTokenizer as we&#8217;re wanting to deal with the full author name string
+</p>
+</li>
+<li>
+<p>
+AuthorNormalizeFilterFactory - again, just as it is in the index analyzer
+</p>
+</li>
+<li>
+<p>
+AuthorCreateQueryVariationsFilterFactory - this is the first of three passes through this particular token filter. In this step the objective is to generate a set of name combinations so that we have the best chance of finding matches in the transliterated synonyms.
+</p>
+</li>
+<li>
+<p>
+SynonymFilterFactory - this step uses the standard Solr synonym filter to expand the query using the transliterated values created by the index process
+</p>
+</li>
+<li>
+<p>
+AuthorTransliterationFactory - Here we ensure that the name combinations from the original query get up-/down-graded
+</p>
+</li>
+<li>
+<p>
+AuthorCreateQueryVariationsFilterFactory - Now that we&#8217;ve possibly expanded the query with transliterated synonyms, we generate name combinations for those new tokens.
+</p>
+</li>
+<li>
+<p>
+SynonymFilterFactory - expand the query further using synonyms from the hand-curated list
+</p>
+</li>
+<li>
+<p>
+AuthorTransliterationFactory - apply transliterations to any new tokens from the hand-curated synonym list
+</p>
+</li>
+<li>
+<p>
+LowerCaseFilterFactory - go ahead and lowercase everything
+</p>
+</li>
+<li>
+<p>
+ResetFilterFactory - this step resets certain parameters of tokens as they pass through.
+</p>
+</li>
+<li>
+<p>
+AuthorCreateQueryVariationsFilterFactory - one last pass through the name combination generator to handle any new tokens from the hand-curated synonyms
+</p>
+</li>
+<li>
+<p>
+RemoveDuplicatesTokenFilterFactory -  The final step removes duplicate tokens. This is necessary because each token filter in the analysis chain is seeing only one token at a time and lacks the context of the complete stream. When a filter recieves a particular token it cannot know whether the filter two steps later is not creating combinations of these names.
+</p>
+</li>
+</ol></div>
+<div class="sect3">
+<h4 id="_walkthrough">Walkthrough</h4>
+<div class="paragraph"><p>Let&#8217;s see how a hypothetical user search of "Muller, Herman" would look at each stage of the query analyzer process, starting with the name combination generator in step #3. For brevity and clarity these illustrations show a de-duped list of the expanded query token stream. In reality the actual deduping doesn&#8217;t happen until the final stage of the analyzer chain.</p></div>
+<div class="imageblock">
+<div class="content">
+<img src="images/search_ex_step_3.png" alt="images/search_ex_step_3.png">
+</div>
+</div>
+<div class="paragraph"><p>At this point we&#8217;ve gone from the single token user query to five possible variations of the name according to our name combination rules.</p></div>
+<div class="imageblock">
+<div class="content">
+<img src="images/search_ex_step_4.png" alt="images/search_ex_step_4.png">
+</div>
+</div>
+<div class="paragraph"><p>We&#8217;ve now done our first synonym lookup using the transliterated author names that were generated at index time. We&#8217;ve expanded from five tokens to nine, and the stream now includes  "upgraded" versions of the name based on the transliteration of "u" to "ü" and "ue". We know that it is safe to perform this upgrade because the synonym file contains only the author name instances that actually exist in the index.</p></div>
+<div class="imageblock">
+<div class="content">
+<img src="images/search_ex_step_6.png" alt="images/search_ex_step_6.png">
+</div>
+</div>
+<div class="paragraph"><p>The newly found transliterated synonyms added to the token stream in the previous step are now processed according to the name combination rules.</p></div>
+<div class="imageblock">
+<div class="content">
+<img src="images/search_ex_step_7.png" alt="images/search_ex_step_7.png">
+</div>
+</div>
+<div class="paragraph"><p>We now do our 2nd synonym lookup, this time using the list of hand-curated synonyms. These are names that our librarian/cataloger believe are legitimatly synonymous. This example shows that we know "Herman Müller" also at some point published under the name "Hank Müller". It should be noted that this is an optional step. The smallish size of the Astronomy/Astrophysics scholarly community makes this kind of manual curation feasible; your mileage may vary.</p></div>
+<div class="imageblock">
+<div class="content">
+<img src="images/search_ex_step_8.png" alt="images/search_ex_step_8.png">
+</div>
+</div>
+<div class="paragraph"><p>Any tokens added in the previous step get the transliteration treatment.</p></div>
+<div class="imageblock">
+<div class="content">
+<img src="images/search_ex_step_10.png" alt="images/search_ex_step_10.png">
+</div>
+</div>
+<div class="paragraph"><p>The final pass through the name combinations generator adds the variations based on "Hank Müller" and gets us up to 21 (after de-duping) total author name tokens in our token stream.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_a_note_on_step_10">A Note on Step 10</h4>
+<div class="paragraph"><p>We have found this step is necessary when a synonym is found. In certain situations, the SynonymFilter will increase the offset parameter, which has the unfortunate side-effect that author names are then searched as a multi-token phrase, i.e., if "Muller, Herman" is expanded with "Muller, Hank", the resulting search is:</p></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>"Muller, Herman (Muller, Herman Muller, Hank)"</pre>
+</div></div>
+<div class="paragraph"><p>Quite clearly not what we want and the problem is really just inside the offset position of generated tokens.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_a_note_on_the_performance_of_synonymfilter">A Note on the Performance of SynonymFilter</h4>
+<div class="paragraph"><p>Since version 4.0, Solr&#8217;s SynonymFilter makes use of the new Finite State Automata (FSA) functionality. Thanks to FSA we can achieve incredibly fast and efficient lookups of author names, even using a dictionaries with millioins of names.</p></div>
+<div class="paragraph"><p>&lt;measurement of the parsing performance, with the 8M name transliteration lookup file?&gt;</p></div>
+<div class="paragraph"><p>&lt;numbers about the memory footprint of the loaded synonym map?&gt;</p></div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_exact_author_search">Exact Author Search</h3>
+<div class="paragraph"><p>As we mentioned previously, the fine-grained nature of the query analyzer components gives us flexibility to mix and match the various token filter steps to create different fieldTypes. This means that, for instance, we can create a separate fieldType called "author_exact". This will be a query-only field type; it doesn&#8217;t require an index analyzer because it will use the same underlying indexed field as the standard "author" fieldType described above.</p></div>
+<div class="listingblock">
+<div class="content"><!-- Generator: GNU source-highlight 3.1.5
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt><span style="font-weight: bold"><span style="color: #0000FF">&lt;fieldType</span></span> <span style="color: #009900">name</span><span style="color: #990000">=</span><span style="color: #FF0000">"author_type_exact"</span> <span style="color: #009900">class</span><span style="color: #990000">=</span><span style="color: #FF0000">"solr.TextField"</span><span style="font-weight: bold"><span style="color: #0000FF">&gt;</span></span>
+    <span style="font-weight: bold"><span style="color: #0000FF">&lt;analyzer</span></span> <span style="color: #009900">type</span><span style="color: #990000">=</span><span style="color: #FF0000">"query"</span><span style="font-weight: bold"><span style="color: #0000FF">&gt;</span></span>
+    <span style="font-style: italic"><span style="color: #9A1900">&lt;!-- similar to "author" field type but</span></span>
+<span style="font-style: italic"><span style="color: #9A1900">    ...</span></span>
+<span style="font-style: italic"><span style="color: #9A1900">    &lt;/analyzer&gt;</span></span>
+<span style="font-style: italic"><span style="color: #9A1900">&lt;/fieldType&gt;</span></span>
+<span style="font-style: italic"><span style="color: #9A1900">...</span></span>
+<span style="font-style: italic"><span style="color: #9A1900">&lt;field name="author_exact" type="author_type_exact" indexed="true" stored="true" multiValued="true" /&gt;</span></span></tt></pre></div></div>
+<div class="paragraph"><p>This approach requires either a custom QueryParser, or at least a minimally etended version of the standard Lucene QueryParser. The parser must choose the appropriate query analyzer based upon the input field type, but then rewrite the query to use the base "author" field index for the actual lookup.</p></div>
+<div class="paragraph"><p>For example, the incoming query:</p></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>author_exact:Müller, H</pre>
+</div></div>
+<div class="paragraph"><p>would be analyzed by the "author_type_exact" fieldType, but then later rewritten to:</p></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>author:Müller, H</pre>
+</div></div>
+<div class="paragraph"><p>for the actual search.</p></div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_summary">Summary</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>That&#8217;s it! Our recommendation when trying to get your head around a solution such as this is to start from the tests. Write the tests that show as many edge cases as possible that your analyzer chain should be able to handle. Start from the simple or the complex ones, but definitely have all the possible combinations there. (Ours has over two thousand lines and tests over one hundred combinations). This test is extremely helpful and in fact indispensable for the complex parsing. It is almost certain that your requirements will change or be expanded and you will be forced to incorporate new changes. Changing one step, maybe even just one parameter in the chain, can potentially break 50% of your author searches. Last, but not least, you can use the unittests as a reminder of how much hair you once had.</p></div>
+</div>
+</div>
+</div>
+<div id="footnotes"><hr></div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2013-01-30 17:17:26 EST
+</div>
+</div>
+</body>
+</html>

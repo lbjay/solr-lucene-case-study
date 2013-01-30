@@ -1,0 +1,319 @@
+﻿Improving Author Name Indexing & Searching
+==========================================
+
+_by Roman Chyla and Jay Luker_
+SAO/NASA Astrophysics Data System (ADS)
+
+Intro
+-----
+
+Searching by an author name is a very common use of the ADS. Somewhere around 50% of all searches, and around 70% of queries coming from our "advanced search" input form, include an author name. The ADS is by no means unique; searching by author is a very common use case for any system that contains information related to people. Even so, the solutions are not as well known as one might think. 
+
+Searching by author has always been possible via the ADS, but due to the poor quality of much of the metadata that we index, not as powerful or accurate as we would like. For instance, because we historically normalized everything to ASCII at both index- and query-time, our legacy search engine is unable to make a distinction between a search for "Müller, H" vs "Muller, H", even though these might actually identify two different authors. 
+
+When we began designing our new Solr/Lucene-based system (currently in alpha release) we decided early in the planning process to try and do things the "right way" going forward. That meant no more discarding information during indexing by downgrading author names to ASCII or shortening first names to initials. The idea would be to still provide a default search that favored recall, therefore a search for "Müller, H" would still return articles authored by "Muller, H"--and even "Mueller, H"--but to also ensure that we allowed for an "exact match" search option.
+
+We challenged ourselves to address as many edge cases as possible. This meant extending the improved author handling to use cases involving an extensive list of author synonyms that is hand-curated by the ADS team. This list includes synonyms for common mis-spellings as well as cases where an author has changed the name under which he or she publishes (e.g., wives taking their husband's last name).
+
+Requirements Overview
+---------------------
+
+- Allow simplified (ascii) user input to match non-ascii "equivalents". Example: a user searching for "Muller, H" should get hits for "Müller, H".
+
+- Allow non-ascii user input to match legacy metadata. Inverse of above.
+
+- Allow matches between information-rich input and information-poor metadata. Example: a search for "Ortiz, David" must match documents indexed with "Ortiz, D".
+
+- And vice-versa. Example: a search for "Ortiz, D" should match documents indexed as "Ortiz, David" (as well as "Ortiz, Diana", "Ortiz, Dagoberto", etc.)
+
+- Search input, once truncated, cannot be expanded again. In other words, truncated input can only be used for exact matching, never as a prefix. Example: a search for "Ortiz, David" may be truncated to find articles by "Ortiz, D", but not then expanded to match "Ortiz, Diana".
+
+- Allow the above rules to interact seamlessly with a set of hand-curated author name synonyms
+
+Solution
+--------
+
+Our solution in a nutshell involves indexing the author names as close to the original metadata as possible, and then expanding query input according to a set of rules to maximize the chance of matching the actual indexed values. The query expansion is done using a combination of two approaches that we refer to as "transliteration" and "name variation". 
+
+The actual implementation takes the form of multiple fieldType definitions that contain several custom tokenizers. We tried as much as possible to use a "divide and conquer" approach to the analyzer components, and this paid off during development as requirements and edge cases revealed themselves.
+
+Transliteration
+~~~~~~~~~~~~~~~
+
+.Transliteration Example
+image::images/translit_ex.png
+
+This image shows a basic example of what we call "transliterations", the practice of substituting ascii translations of common, non-ascii, unicode characters. It illustrates how an author search for any of "Muller", "Mueller" or "Müller" will find documents authored by any of "Muller", "Mueller" or "Müller". We accomplish this by expanding the user's original query to include the transliterated equivalents:
+
+----
+author:"Muller, H"
+----
+
+becomes...
+
+----
+(author:"Muller, H" OR author:"Mueller, H" OR author:"Müller, H")
+----
+
+It's important to point out that this goes beyond simply downgrading to ASCII. Yes, a search for "Müller still gets downgraded to "Muller", but the inverse is also true: "Muller" will get _upgraded_ to "Müller". This is much more complicated than simply translating every occurrance of "ü|u|ue", "ä|a|ae" and "č|c|ch". To selectively apply these transliaterations you have to let the actual corpus of indexed metadata tell you which names are to be upgraded, and that has to happen as part of the indexing process.
+
+Name Combinations
+~~~~~~~~~~~~~~~~~
+
+The term "name combinations" refers to our practice of generating multilpe varaitions of an author name based upon the available information contained within the string. It involves splitting the name into its component parts--first, last, middle, initials, etc.--and then re-combining the parts according to a set of rules. First and middle names will be shorted to initials in some combinations. Others will include wildcards ("*"), or even regular expression syntax ("\b.*"), so that the resulting token acts as a PrefixQuery or RegexpQuery, respectively.
+
+For example, the input string "Ortiz, David A" will result in the following combinations:
+
+- Ortiz,
+- Ortiz, D
+- Ortiz, David
+- Ortiz, D A*
+- Ortiz, David A*
+
+.Name Combination Example
+image::images/name_combinations_ex.png[]
+
+Index Analysis
+~~~~~~~~~~~~~~
+
+Index analysis of the author names is minimal. The only non-standard filter in use is the AuthorNormalizeFilterFactory. It's responsible for trimming some punctuation and whitespace. Tokens are also lowercased and de-duped, but otherwise the author metadata is indexed "as is". 
+
+.The "author" fieldType Index Analyzer
+[source,xml]
+----
+<fieldType name="author" class="solr.TextField" positionIncrementGap="100">
+    <analyzer type="index">
+        <tokenizer class="solr.KeywordTokenizerFactory" />
+        <filter class="custom.AuthorNormalizeFilterFactory" />
+        <filter class="solr.LowerCaseFilterFactory" />
+        <filter class="oal.analysis.miscellaneous.RemoveDuplicatesTokenFilterFactory" />
+    </analyzer>
+    ...
+----
+
+Pretty boring? Well, we're not done yet. There is an important 2nd step in the indexing process. 
+
+Following a bulk re-indexing, a separate Solr handler, '/dump-index', is called. This handler triggers a "dump" of the indexed author values. As the indexed author name values are extracted they are fed back into Solr, as *queries*, to a special "author_collector" field. This field's query analysis chain performs the transliterations on the input tokens and writes the expanded output to a file which can then be used as the source of a SynonymFilterFactory in the query Analyzer.
+
+.The "author_collector" fieldType
+[source,xml]
+----
+    <fieldType name="author_collector" class="solr.TextField"
+        positionIncrementGap="100">
+        <analyzer type="query"> <!-- must be query type! -->
+            <tokenizer class="solr.KeywordTokenizerFactory" />
+            <filter class="solr.analysis.author.AuthorNormalizeFilterFactory" />
+            <filter class="solr.analysis.author.AuthorTransliterationFactory" />
+            <filter class="solr.analysis.author.AuthorCollectorFactory"
+                outFile="author_generated.translit" tokenTypes="AUTHOR_TRANSLITERATED"
+                emitTokens="false" />
+        </analyzer>
+    </fieldType>
+----
+
+
+.AuthorTransliterationFilter
+[source,java]
+----
+  ...
+  @Override
+  public boolean incrementToken() throws IOException {
+
+    if (this.transliterationStack.size() > 0) {
+      String syn = this.transliterationStack.pop();
+      this.restoreState(this.current);
+      this.termAtt.setEmpty();
+      this.termAtt.append(syn);
+      this.posIncrAtt.setPositionIncrement(0);
+      this.typeAtt.setType(AuthorUtils.AUTHOR_TRANSLITERATED); // <-- type the AuthorCollectorFilter looks for
+      return true;
+    }
+
+    if (!input.incrementToken()) return false;
+
+    if (tokenType == null && this.genVariants()) { // null means process all tokens
+      this.current = captureState();
+    }
+    else if (typeAtt.type().equals(tokenType) && this.genVariants()) {
+      this.current = this.captureState();
+    }
+
+    return true;
+  }
+
+  private boolean genVariants() {
+    // "Müller, Herman" -> ["Müller, Herman", "Muller, Herman", "Mueller, Herman"]
+    ArrayList<String> translit = AuthorUtils.getAsciiTransliteratedVariants(termAtt.toString());
+    if (translit.size() > 0) {
+      transliterationStack.addAll(translit);
+      return true;
+    }
+    return false;
+  }
+----
+
+To summarize the above code samples, the AuthorTransliterationFilter is accepting incoming author name tokens, generating their transliterated variants, and then adding those variants onto the token stream as a specific token type, AUTHOR_TRANSLITERATED. The AuthorCollectorFilter then collects these variants in a buffer and eventually persists them to a file called "author_variations.translit" which will be used as a source of synonyms at query-time. 
+
+There is a downside to this workflow: because the synonym file being written to, "author_generated.translit", is being used by the live Solr instance, a core reload is required for any term changes to take effect.
+
+We tend to do regular complete re-indexing of our entire 10 million document collection, but this dump/collect workflow could also be independently scheduled on a regular basis to handle incremental index updates.
+
+.Index Analyzer
+image::images/index_analysis_chain.png[]
+
+Query Analysis
+~~~~~~~~~~~~~~
+
+As mentioned previously, we took a "divide and conquer" approach that attempted to make the division of labor between the token filters as granular as possible. While the result may seem overly convoluted, it allowed us the flexibility we needed to define additional fieldTypes with slightly modified tokenizer chains. More on that later.
+
+.Query Analyzer
+[source,xml]
+----
+    <analyzer type="query">
+        <tokenizer class="solr.KeywordTokenizerFactory" />
+
+        <!-- normalize order and surname form: eg. "adamcuk" becomes "adamcuk," 
+            and "adamczuk, k" becomes "adamczuk, k" -->
+        <filter class="custom.AuthorNormalizeFilterFactory" />
+
+        <!-- generate name combinations -->
+        <filter class="custom.AuthorCreateQueryVariationsFilterFactory" minNameParts="1" />
+
+        <!-- replace with transliterated variant(s) -->
+        <filter class="solr.SynonymFilterFactory" synonyms="author_generated.translit"
+            ignoreCase="true" expand="true" tokenizerFactory="solr.KeywordTokenizerFactory" />
+
+        <!-- run transliteration again to ensure original query input gets up-/down-graded -->
+        <filter class="custom.AuthorTransliterationFactory" inputType="null" />
+
+        <!-- generate name combinations again -->
+        <filter class="custom.AuthorCreateQueryVariationsFilterFactory" minNameParts="1" />
+
+        <!-- expand using the hand-curated synonym list -->
+        <filter class="solr.SynonymFilterFactory" synonyms="author_curated.synonyms"
+            ignoreCase="true" expand="true" tokenizerFactory="solr.KeywordTokenizerFactory" />
+
+        <!-- more transliteration to catch new tokens from the hand-curated synonyms
+        <filter class="custom.AuthorTransliterationFactory" inputType="SYNONYM" />
+
+        <!-- lowercase normalize everything -->
+        <filter class="solr.LowerCaseFilterFactory" />
+
+        <!-- reset posIncrement because somtimes synonym expansion causes position bumps;
+            range="1,100" ensures that we skip the first token -->
+        <filter class="solr.analysis.ResetFilterFactory" posIncrement="0" range="1,100" />
+
+        <!-- one last name combination run to handle possible hand-curated synonyms
+        <filter class="custom.AuthorCreateQueryVariationsFilterFactory"
+            minNameParts="1" plainSurname="true" addShortenedMultiName="true"
+            addWildcards="false" lookAtPayloadForOrigAuthor="false" />
+
+        <!-- deal with multiple occurences of the same (can happen because of the overlapping synonyms) -->
+        <filter class="oal.analysis.miscellaneous.RemoveDuplicatesTokenFilterFactory" />
+        
+    </analyzer>
+</fieldType>
+----
+
+Let's step through the operations one-by-one. At each step the goal is to continue expanding the query input to maximize the chance of matching either entries in the two synonym lists, or eventually the index itself.
+
+. KeywordTokenizer - here, as before in the index analyzer, we use the KeywordTokenizer as we're wanting to deal with the full author name string
+. AuthorNormalizeFilterFactory - again, just as it is in the index analyzer
+. AuthorCreateQueryVariationsFilterFactory - this is the first of three passes through this particular token filter. In this step the objective is to generate a set of name combinations so that we have the best chance of finding matches in the transliterated synonyms. 
+. SynonymFilterFactory - this step uses the standard Solr synonym filter to expand the query using the transliterated values created by the index process
+. AuthorTransliterationFactory - Here we ensure that the name combinations from the original query get up-/down-graded 
+. AuthorCreateQueryVariationsFilterFactory - Now that we've possibly expanded the query with transliterated synonyms, we generate name combinations for those new tokens.
+. SynonymFilterFactory - expand the query further using synonyms from the hand-curated list
+. AuthorTransliterationFactory - apply transliterations to any new tokens from the hand-curated synonym list
+. LowerCaseFilterFactory - go ahead and lowercase everything
+. ResetFilterFactory - this step resets certain parameters of tokens as they pass through. 
+. AuthorCreateQueryVariationsFilterFactory - one last pass through the name combination generator to handle any new tokens from the hand-curated synonyms
+. RemoveDuplicatesTokenFilterFactory -  The final step removes duplicate tokens. This is necessary because each token filter in the analysis chain is seeing only one token at a time and lacks the context of the complete stream. When a filter recieves a particular token it cannot know whether the filter two steps later is not creating combinations of these names.
+
+Walkthrough
+^^^^^^^^^^^
+
+Let's see how a hypothetical user search of "Muller, Herman" would look at each stage of the query analyzer process, starting with the name combination generator in step #3. For brevity and clarity these illustrations show a de-duped list of the expanded query token stream. In reality the actual deduping doesn't happen until the final stage of the analyzer chain.
+
+image::images/search_ex_step_3.png[]
+
+At this point we've gone from the single token user query to five possible variations of the name according to our name combination rules.
+
+image::images/search_ex_step_4.png[]
+
+We've now done our first synonym lookup using the transliterated author names that were generated at index time. We've expanded from five tokens to nine, and the stream now includes  "upgraded" versions of the name based on the transliteration of "u" to "ü" and "ue". We know that it is safe to perform this upgrade because the synonym file contains only the author name instances that actually exist in the index.
+
+image::images/search_ex_step_6.png[]
+
+The newly found transliterated synonyms added to the token stream in the previous step are now processed according to the name combination rules.
+
+image::images/search_ex_step_7.png[]
+
+We now do our 2nd synonym lookup, this time using the list of hand-curated synonyms. These are names that our librarian/cataloger believe are legitimatly synonymous. This example shows that we know "Herman Müller" also at some point published under the name "Hank Müller". It should be noted that this is an optional step. The smallish size of the Astronomy/Astrophysics scholarly community makes this kind of manual curation feasible; your mileage may vary. 
+
+image::images/search_ex_step_8.png[]
+
+Any tokens added in the previous step get the transliteration treatment.
+
+image::images/search_ex_step_10.png[]
+
+The final pass through the name combinations generator adds the variations based on "Hank Müller" and gets us up to 21 (after de-duping) total author name tokens in our token stream.
+
+A Note on Step 10
+^^^^^^^^^^^^^^^^^
+We have found this step is necessary when a synonym is found. In certain situations, the SynonymFilter will increase the offset parameter, which has the unfortunate side-effect that author names are then searched as a multi-token phrase, i.e., if "Muller, Herman" is expanded with "Muller, Hank", the resulting search is:
+
+----
+"Muller, Herman (Muller, Herman Muller, Hank)"
+----
+
+Quite clearly not what we want and the problem is really just inside the offset position of generated tokens.
+
+A Note on the Performance of SynonymFilter
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Since version 4.0, Solr's SynonymFilter makes use of the new Finite State Automata (FSA) functionality. Thanks to FSA we can achieve incredibly fast and efficient lookups of author names, even using a dictionaries with millioins of names.
+
+<measurement of the parsing performance, with the 8M name transliteration lookup file?>
+
+<numbers about the memory footprint of the loaded synonym map?>
+
+Exact Author Search
+~~~~~~~~~~~~~~~~~~~
+
+As we mentioned previously, the fine-grained nature of the query analyzer components gives us flexibility to mix and match the various token filter steps to create different fieldTypes. This means that, for instance, we can create a separate fieldType called "author_exact". This will be a query-only field type; it doesn't require an index analyzer because it will use the same underlying indexed field as the standard "author" fieldType described above.
+
+[source,xml]
+----
+<fieldType name="author_type_exact" class="solr.TextField">
+    <analyzer type="query">
+    <!-- similar to "author" field type but 
+    ...
+    </analyzer>
+</fieldType>
+...
+<field name="author_exact" type="author_type_exact" indexed="true" stored="true" multiValued="true" />
+----
+
+This approach requires either a custom QueryParser, or at least a minimally etended version of the standard Lucene QueryParser. The parser must choose the appropriate query analyzer based upon the input field type, but then rewrite the query to use the base "author" field index for the actual lookup. 
+
+// [example query parser code...]
+
+For example, the incoming query:
+
+----
+author_exact:Müller, H
+----
+
+would be analyzed by the "author_type_exact" fieldType, but then later rewritten to:
+
+----
+author:Müller, H
+----
+
+for the actual search.
+
+Summary
+-------
+That's it! Our recommendation when trying to get your head around a solution such as this is to start from the tests. Write the tests that show as many edge cases as possible that your analyzer chain should be able to handle. Start from the simple or the complex ones, but definitely have all the possible combinations there. (Ours has over two thousand lines and tests over one hundred combinations). This test is extremely helpful and in fact indispensable for the complex parsing. It is almost certain that your requirements will change or be expanded and you will be forced to incorporate new changes. Changing one step, maybe even just one parameter in the chain, can potentially break 50% of your author searches. Last, but not least, you can use the unittests as a reminder of how much hair you once had.
+
