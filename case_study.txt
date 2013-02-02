@@ -11,9 +11,7 @@ Searching by an author name is a very common use of the ADS. Somewhere around 70
 
 Historically, searching by author has always been possible via the ADS, but due to the poor quality of much of the metadata that we index, not as powerful or accurate as we would like. For instance, because in the distant past we normalized everything to ASCII at both index- and query-time, our legacy search engine is unable to make a distinction between a search for "Müller, H" vs "Muller, H", even though these might actually identify two different authors. 
 
-When we began designing our new Solr/Lucene-based system (currently in alpha release) we decided to try and do things the "right way" going forward. That meant no more discarding information during indexing, but also automatic expansion when necessary. The idea would be to still provide a default search that favored recall, therefore a search for "Müller, H" would still return articles authored by "Muller, H" -- and even "Mueller, H" -- but to also ensure that we allowed for an "exact match" search option. [Jay, in your first draft, there was st on precision/recall balance. I thought that was really good - logically, it would fit somewhere in here]
-
-We challenged ourselves to address as many edge cases as possible. This meant extending the author handling to allow very high recall, but at the same time retain control over the precision.
+When we began designing our new Solr/Lucene-based system (currently in alpha release) we decided to try and do things the "right way" going forward. That meant no more discarding information during indexing, but also automatic expansion when necessary. We challenged ourselves to address as many edge cases as possible. This meant extending the author handling to allow very high recall, but at the same time retain control over the precision. The idea would be to still provide a default search that favored recall, therefore a search for "Müller, H" would still return articles authored by "Muller, H" -- and even "Mueller, H" -- but to also ensure that we allowed for an "exact match" search option. 
 
 Requirements Overview
 ---------------------
