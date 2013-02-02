@@ -850,10 +850,9 @@ SAO/NASA Astrophysics Data System (ADS)</p></div>
 <div class="sect1">
 <h2 id="_intro">Intro</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Searching by an author name is a very common use of the ADS. Somewhere around 50% of all searches, and around 70% of queries coming from our "advanced search" input form, include an author name. The ADS is by no means unique; searching by author is a very common use case for any system that contains information related to people. Even so, the solutions are not as well known as one might think.</p></div>
-<div class="paragraph"><p>Searching by author has always been possible via the ADS, but due to the poor quality of much of the metadata that we index, not as powerful or accurate as we would like. For instance, because we historically normalized everything to ASCII at both index- and query-time, our legacy search engine is unable to make a distinction between a search for "Müller, H" vs "Muller, H", even though these might actually identify two different authors.</p></div>
-<div class="paragraph"><p>When we began designing our new Solr/Lucene-based system (currently in alpha release) we decided early in the planning process to try and do things the "right way" going forward. That meant no more discarding information during indexing by downgrading author names to ASCII or shortening first names to initials. The idea would be to still provide a default search that favored recall, therefore a search for "Müller, H" would still return articles authored by "Muller, H"--and even "Mueller, H"--but to also ensure that we allowed for an "exact match" search option.</p></div>
-<div class="paragraph"><p>We challenged ourselves to address as many edge cases as possible. This meant extending the improved author handling to use cases involving an extensive list of author synonyms that is hand-curated by the ADS team. This list includes synonyms for common mis-spellings as well as cases where an author has changed the name under which he or she publishes (e.g., wives taking their husband&#8217;s last name).</p></div>
+<div class="paragraph"><p>Searching by an author name is a very common use of the ADS. Somewhere around 70% of queries coming from our "advanced search" input form (and 50% of all searches), include an author name. The ADS is by no means unique; searching by author is a very common use case for any system that contains information related to people. Even so, the adopted solutions are not as well known as one might think.</p></div>
+<div class="paragraph"><p>Historically, searching by author has always been possible via the ADS, but due to the poor quality of much of the metadata that we index, not as powerful or accurate as we would like. For instance, because in the distant past we normalized everything to ASCII at both index- and query-time, our legacy search engine is unable to make a distinction between a search for "Müller, H" vs "Muller, H", even though these might actually identify two different authors.</p></div>
+<div class="paragraph"><p>When we began designing our new Solr/Lucene-based system (currently in alpha release) we decided to try and do things the "right way" going forward. That meant no more discarding information during indexing, but also automatic expansion when necessary. We challenged ourselves to address as many edge cases as possible. This meant extending the author handling to allow very high recall, but at the same time retain control over the precision. The idea would be to still provide a default search that favored recall, therefore a search for "Müller, H" would still return articles authored by "Muller, H"&#8201;&#8212;&#8201;and even "Mueller, H"&#8201;&#8212;&#8201;but to also ensure that we allowed for an "exact match" search option.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -862,12 +861,12 @@ SAO/NASA Astrophysics Data System (ADS)</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
-Allow simplified (ascii) user input to match non-ascii "equivalents". Example: a user searching for "Muller, H" should get hits for "Müller, H".
+Allow simplified (ascii) user input to match non-ascii "equivalents". Example: search for "Muller, H" returns also "Müller, H".
 </p>
 </li>
 <li>
 <p>
-Allow non-ascii user input to match legacy metadata. Inverse of above.
+Allow non-ascii user input to match legacy metadata. Example: search for "Müller, H" returns also "Muller, H".
 </p>
 </li>
 <li>
@@ -877,7 +876,7 @@ Allow matches between information-rich input and information-poor metadata. Exam
 </li>
 <li>
 <p>
-And vice-versa. Example: a search for "Ortiz, D" should match documents indexed as "Ortiz, David" (as well as "Ortiz, Diana", "Ortiz, Dagoberto", etc.)
+And vice-versa. Example: a search for "Ortiz, D" matches documents indexed as "Ortiz, David" (as well as "Ortiz, Diana", "Ortiz, Dagoberto", etc.)
 </p>
 </li>
 <li>
@@ -887,7 +886,7 @@ Search input, once truncated, cannot be expanded again. In other words, truncate
 </li>
 <li>
 <p>
-Allow the above rules to interact seamlessly with a set of hand-curated author name synonyms
+Allow the above rules to interact seamlessly with a set of hand-curated author name synonyms. This list includes synonyms for common mis-spellings as well as changes in author names (e.g., wives taking their husband&#8217;s last name).
 </p>
 </li>
 </ul></div>
@@ -898,61 +897,6 @@ Allow the above rules to interact seamlessly with a set of hand-curated author n
 <div class="sectionbody">
 <div class="paragraph"><p>Our solution in a nutshell involves indexing the author names as close to the original metadata as possible, and then expanding query input according to a set of rules to maximize the chance of matching the actual indexed values. The query expansion is done using a combination of two approaches that we refer to as "transliteration" and "name variation".</p></div>
 <div class="paragraph"><p>The actual implementation takes the form of multiple fieldType definitions that contain several custom tokenizers. We tried as much as possible to use a "divide and conquer" approach to the analyzer components, and this paid off during development as requirements and edge cases revealed themselves.</p></div>
-<div class="sect2">
-<h3 id="_transliteration">Transliteration</h3>
-<div class="paragraph"><div class="title">Transliteration Example</div><p>image::images/translit_ex.png</p></div>
-<div class="paragraph"><p>This image shows a basic example of what we call "transliterations", the practice of substituting ascii translations of common, non-ascii, unicode characters. It illustrates how an author search for any of "Muller", "Mueller" or "Müller" will find documents authored by any of "Muller", "Mueller" or "Müller". We accomplish this by expanding the user&#8217;s original query to include the transliterated equivalents:</p></div>
-<div class="listingblock">
-<div class="content monospaced">
-<pre>author:"Muller, H"</pre>
-</div></div>
-<div class="paragraph"><p>becomes&#8230;</p></div>
-<div class="listingblock">
-<div class="content monospaced">
-<pre>(author:"Muller, H" OR author:"Mueller, H" OR author:"Müller, H")</pre>
-</div></div>
-<div class="paragraph"><p>It&#8217;s important to point out that this goes beyond simply downgrading to ASCII. Yes, a search for "Müller still gets downgraded to "Muller", but the inverse is also true: "Muller" will get <em>upgraded</em> to "Müller". This is much more complicated than simply translating every occurrance of "ü|u|ue", "ä|a|ae" and "č|c|ch". To selectively apply these transliaterations you have to let the actual corpus of indexed metadata tell you which names are to be upgraded, and that has to happen as part of the indexing process.</p></div>
-</div>
-<div class="sect2">
-<h3 id="_name_combinations">Name Combinations</h3>
-<div class="paragraph"><p>The term "name combinations" refers to our practice of generating multilpe varaitions of an author name based upon the available information contained within the string. It involves splitting the name into its component parts&#8212;first, last, middle, initials, etc.--and then re-combining the parts according to a set of rules. First and middle names will be shorted to initials in some combinations. Others will include wildcards ("<strong>"), or even regular expression syntax ("\b.</strong>"), so that the resulting token acts as a PrefixQuery or RegexpQuery, respectively.</p></div>
-<div class="paragraph"><p>For example, the input string "Ortiz, David A" will result in the following combinations:</p></div>
-<div class="ulist"><ul>
-<li>
-<p>
-Ortiz,
-</p>
-</li>
-<li>
-<p>
-Ortiz, D
-</p>
-</li>
-<li>
-<p>
-Ortiz, David
-</p>
-</li>
-<li>
-<p>
-Ortiz, D A*
-</p>
-</li>
-<li>
-<p>
-Ortiz, David A*
-</p>
-</li>
-</ul></div>
-<div class="imageblock">
-<div class="content">
-<img src="images/name_combinations_ex.png" alt="images/name_combinations_ex.png">
-</div>
-<div class="title">Figure 1. Name Combination Example</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_index_analysis">Index Analysis</h3>
 <div class="paragraph"><p>Index analysis of the author names is minimal. The only non-standard filter in use is the AuthorNormalizeFilterFactory. It&#8217;s responsible for trimming some punctuation and whitespace. Tokens are also lowercased and de-duped, but otherwise the author metadata is indexed "as is".</p></div>
 <div class="listingblock">
 <div class="title">The "author" fieldType Index Analyzer</div>
@@ -968,7 +912,7 @@ http://www.gnu.org/software/src-highlite -->
         <span style="font-weight: bold"><span style="color: #0000FF">&lt;filter</span></span> <span style="color: #009900">class</span><span style="color: #990000">=</span><span style="color: #FF0000">"oal.analysis.miscellaneous.RemoveDuplicatesTokenFilterFactory"</span> <span style="font-weight: bold"><span style="color: #0000FF">/&gt;</span></span>
     <span style="font-weight: bold"><span style="color: #0000FF">&lt;/analyzer&gt;</span></span>
     ...</tt></pre></div></div>
-<div class="paragraph"><p>Pretty boring? Well, we&#8217;re not done yet. There is an important 2nd step in the indexing process.</p></div>
+<div class="paragraph"><p>Pretty boring? Well, it is not done yet. There is an important 2nd step in the indexing process.</p></div>
 <div class="paragraph"><p>Following a bulk re-indexing, a separate Solr handler, <em>/dump-index</em>, is called. This handler triggers a "dump" of the indexed author values. As the indexed author name values are extracted they are fed back into Solr, as <strong>queries</strong>, to a special "author_collector" field. This field&#8217;s query analysis chain performs the transliterations on the input tokens and writes the expanded output to a file which can then be used as the source of a SynonymFilterFactory in the query Analyzer.</p></div>
 <div class="listingblock">
 <div class="title">The "author_collector" fieldType</div>
@@ -1035,63 +979,120 @@ http://www.gnu.org/software/src-highlite -->
 <div class="content">
 <img src="images/index_analysis_chain.png" alt="images/index_analysis_chain.png">
 </div>
-<div class="title">Figure 2. Index Analyzer</div>
-</div>
+<div class="title">Figure 1. Index Analyzer</div>
 </div>
 <div class="sect2">
 <h3 id="_query_analysis">Query Analysis</h3>
-<div class="paragraph"><p>As mentioned previously, we took a "divide and conquer" approach that attempted to make the division of labor between the token filters as granular as possible. While the result may seem overly convoluted, it allowed us the flexibility we needed to define additional fieldTypes with slightly modified tokenizer chains. More on that later.</p></div>
+<div class="paragraph"><p>As mentioned previously, we took a "divide and conquer" approach that attempted to make the division of labor between the token filters as granular as possible. This flexibility is necessary for additional fieldTypes with slightly modified tokenizer chains. More on that later.</p></div>
+</div>
+<div class="sect2">
+<h3 id="_transliteration">Transliteration</h3>
+<div class="imageblock">
+<div class="content">
+<img src="images/translit_ex.png" alt="images/translit_ex.png">
+</div>
+<div class="title">Figure 2. Transliteration Example</div>
+</div>
+<div class="paragraph"><p>This image shows a basic example of what we call "transliterations", the practice of substituting ascii translations of common, non-ascii, unicode characters. It illustrates how an author search for any of "Muller", "Mueller" or "Müller" will find documents authored by any of "Muller", "Mueller" or "Müller". The user&#8217;s original query is expanded to include the transliterated equivalents:</p></div>
 <div class="listingblock">
-<div class="title">Query Analyzer</div>
+<div class="content monospaced">
+<pre>author:"Muller, H"</pre>
+</div></div>
+<div class="paragraph"><p>becomes&#8230;</p></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>(author:"Muller, H" OR author:"Mueller, H" OR author:"Müller, H")</pre>
+</div></div>
+<div class="paragraph"><p>It&#8217;s important to point out that this goes beyond simply downgrading to ASCII. Yes, a search for "Müller still gets downgraded to "Muller", but the inverse is also true: "Muller" will get <em>upgraded</em> to "Müller". This is much more complicated than simply translating every occurrance of "ü|u|ue", "ä|a|ae" and "č|c|ch". To selectively apply these transliaterations you have to let the actual corpus of indexed metadata tell you which names are to be upgraded, and that has to happen as part of the indexing process. And for this reason we do not tokenize author names into surname but instead store their normalized version and later export them into the "author_generated.translit" you saw above.</p></div>
+</div>
+<div class="sect2">
+<h3 id="_name_combinations">Name Combinations</h3>
+<div class="paragraph"><p>The term "name combinations" refers to our practice of generating multiple variations of an author name based upon the available information contained within the string. It involves splitting the name into its component parts&#8201;&#8212;&#8201;first, last, middle, initials, etc.&#8201;&#8212;&#8201;and then re-combining the parts according to a set of rules. First and middle names will be shortened to initials in some combinations. Others will include wildcards ("<strong>"), or even regular expression syntax ("\b.</strong>"), so that the resulting token acts as a PrefixQuery or RegexpQuery, respectively.</p></div>
+<div class="paragraph"><p>For example, the input string "Ortiz, David A" will result in the following combinations:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Ortiz,
+</p>
+</li>
+<li>
+<p>
+Ortiz, D
+</p>
+</li>
+<li>
+<p>
+Ortiz, David
+</p>
+</li>
+<li>
+<p>
+Ortiz, D A*
+</p>
+</li>
+<li>
+<p>
+Ortiz, David A*
+</p>
+</li>
+</ul></div>
+<div class="imageblock">
+<div class="content">
+<img src="images/name_combinations_ex.png" alt="images/name_combinations_ex.png">
+</div>
+<div class="title">Figure 3. Name Combination Example</div>
+</div>
+<div class="paragraph"><div class="title">Query Analyzer</div><p>Let&#8217;s look at the query analyzer configuration and step through the operations one-by-one. At each step the goal is to continue expanding the query input to maximize the chance of matching either entries in the two synonym lists, or eventually the index itself.</p></div>
+<div class="listingblock">
 <div class="content"><!-- Generator: GNU source-highlight 3.1.5
 by Lorenzo Bettini
 http://www.lorenzobettini.it
 http://www.gnu.org/software/src-highlite -->
 <pre><tt>    <span style="font-weight: bold"><span style="color: #0000FF">&lt;analyzer</span></span> <span style="color: #009900">type</span><span style="color: #990000">=</span><span style="color: #FF0000">"query"</span><span style="font-weight: bold"><span style="color: #0000FF">&gt;</span></span>
+        <span style="font-style: italic"><span style="color: #9A1900">&lt;!-- #1  --&gt;</span></span>
         <span style="font-weight: bold"><span style="color: #0000FF">&lt;tokenizer</span></span> <span style="color: #009900">class</span><span style="color: #990000">=</span><span style="color: #FF0000">"solr.KeywordTokenizerFactory"</span> <span style="font-weight: bold"><span style="color: #0000FF">/&gt;</span></span>
 
-        <span style="font-style: italic"><span style="color: #9A1900">&lt;!-- normalize order and surname form: eg. "adamcuk" becomes "adamcuk,"</span></span>
+        <span style="font-style: italic"><span style="color: #9A1900">&lt;!-- #2 normalize order and surname form: eg. "adamcuk" becomes "adamcuk,"</span></span>
 <span style="font-style: italic"><span style="color: #9A1900">            and "adamczuk, k" becomes "adamczuk, k" --&gt;</span></span>
         <span style="font-weight: bold"><span style="color: #0000FF">&lt;filter</span></span> <span style="color: #009900">class</span><span style="color: #990000">=</span><span style="color: #FF0000">"custom.AuthorNormalizeFilterFactory"</span> <span style="font-weight: bold"><span style="color: #0000FF">/&gt;</span></span>
 
-        <span style="font-style: italic"><span style="color: #9A1900">&lt;!-- generate name combinations --&gt;</span></span>
+        <span style="font-style: italic"><span style="color: #9A1900">&lt;!-- #3 generate name combinations --&gt;</span></span>
         <span style="font-weight: bold"><span style="color: #0000FF">&lt;filter</span></span> <span style="color: #009900">class</span><span style="color: #990000">=</span><span style="color: #FF0000">"custom.AuthorCreateQueryVariationsFilterFactory"</span> <span style="color: #009900">minNameParts</span><span style="color: #990000">=</span><span style="color: #FF0000">"1"</span> <span style="font-weight: bold"><span style="color: #0000FF">/&gt;</span></span>
 
-        <span style="font-style: italic"><span style="color: #9A1900">&lt;!-- replace with transliterated variant(s) --&gt;</span></span>
+        <span style="font-style: italic"><span style="color: #9A1900">&lt;!-- #4 replace with transliterated variant(s) --&gt;</span></span>
         <span style="font-weight: bold"><span style="color: #0000FF">&lt;filter</span></span> <span style="color: #009900">class</span><span style="color: #990000">=</span><span style="color: #FF0000">"solr.SynonymFilterFactory"</span> <span style="color: #009900">synonyms</span><span style="color: #990000">=</span><span style="color: #FF0000">"author_generated.translit"</span>
             <span style="color: #009900">ignoreCase</span><span style="color: #990000">=</span><span style="color: #FF0000">"true"</span> <span style="color: #009900">expand</span><span style="color: #990000">=</span><span style="color: #FF0000">"true"</span> <span style="color: #009900">tokenizerFactory</span><span style="color: #990000">=</span><span style="color: #FF0000">"solr.KeywordTokenizerFactory"</span> <span style="font-weight: bold"><span style="color: #0000FF">/&gt;</span></span>
 
-        <span style="font-style: italic"><span style="color: #9A1900">&lt;!-- run transliteration again to ensure original query input gets up-/down-graded --&gt;</span></span>
+        <span style="font-style: italic"><span style="color: #9A1900">&lt;!-- #5 run transliteration again to ensure original query input gets up-/down-graded --&gt;</span></span>
         <span style="font-weight: bold"><span style="color: #0000FF">&lt;filter</span></span> <span style="color: #009900">class</span><span style="color: #990000">=</span><span style="color: #FF0000">"custom.AuthorTransliterationFactory"</span> <span style="color: #009900">inputType</span><span style="color: #990000">=</span><span style="color: #FF0000">"null"</span> <span style="font-weight: bold"><span style="color: #0000FF">/&gt;</span></span>
 
-        <span style="font-style: italic"><span style="color: #9A1900">&lt;!-- generate name combinations again --&gt;</span></span>
+        <span style="font-style: italic"><span style="color: #9A1900">&lt;!-- #6 generate name combinations again --&gt;</span></span>
         <span style="font-weight: bold"><span style="color: #0000FF">&lt;filter</span></span> <span style="color: #009900">class</span><span style="color: #990000">=</span><span style="color: #FF0000">"custom.AuthorCreateQueryVariationsFilterFactory"</span> <span style="color: #009900">minNameParts</span><span style="color: #990000">=</span><span style="color: #FF0000">"1"</span> <span style="font-weight: bold"><span style="color: #0000FF">/&gt;</span></span>
 
-        <span style="font-style: italic"><span style="color: #9A1900">&lt;!-- expand using the hand-curated synonym list --&gt;</span></span>
+        <span style="font-style: italic"><span style="color: #9A1900">&lt;!-- #7 expand using the hand-curated synonym list --&gt;</span></span>
         <span style="font-weight: bold"><span style="color: #0000FF">&lt;filter</span></span> <span style="color: #009900">class</span><span style="color: #990000">=</span><span style="color: #FF0000">"solr.SynonymFilterFactory"</span> <span style="color: #009900">synonyms</span><span style="color: #990000">=</span><span style="color: #FF0000">"author_curated.synonyms"</span>
             <span style="color: #009900">ignoreCase</span><span style="color: #990000">=</span><span style="color: #FF0000">"true"</span> <span style="color: #009900">expand</span><span style="color: #990000">=</span><span style="color: #FF0000">"true"</span> <span style="color: #009900">tokenizerFactory</span><span style="color: #990000">=</span><span style="color: #FF0000">"solr.KeywordTokenizerFactory"</span> <span style="font-weight: bold"><span style="color: #0000FF">/&gt;</span></span>
 
-        <span style="font-style: italic"><span style="color: #9A1900">&lt;!-- more transliteration to catch new tokens from the hand-curated synonyms</span></span>
-<span style="font-style: italic"><span style="color: #9A1900">        &lt;filter class="custom.AuthorTransliterationFactory" inputType="SYNONYM" /&gt;</span></span>
+        <span style="font-style: italic"><span style="color: #9A1900">&lt;!-- #8 more transliteration to catch new tokens from the hand-curated synonyms --&gt;</span></span>
+        <span style="font-weight: bold"><span style="color: #0000FF">&lt;filter</span></span> <span style="color: #009900">class</span><span style="color: #990000">=</span><span style="color: #FF0000">"custom.AuthorTransliterationFactory"</span> <span style="color: #009900">inputType</span><span style="color: #990000">=</span><span style="color: #FF0000">"SYNONYM"</span> <span style="font-weight: bold"><span style="color: #0000FF">/&gt;</span></span>
 
-<span style="font-style: italic"><span style="color: #9A1900">        &lt;!-- lowercase normalize everything --&gt;</span></span>
-<span style="font-style: italic"><span style="color: #9A1900">        &lt;filter class="solr.LowerCaseFilterFactory" /&gt;</span></span>
+        <span style="font-style: italic"><span style="color: #9A1900">&lt;!-- #9 lowercase normalize everything --&gt;</span></span>
+        <span style="font-weight: bold"><span style="color: #0000FF">&lt;filter</span></span> <span style="color: #009900">class</span><span style="color: #990000">=</span><span style="color: #FF0000">"solr.LowerCaseFilterFactory"</span> <span style="font-weight: bold"><span style="color: #0000FF">/&gt;</span></span>
 
-<span style="font-style: italic"><span style="color: #9A1900">        &lt;!-- reset posIncrement because somtimes synonym expansion causes position bumps;</span></span>
+        <span style="font-style: italic"><span style="color: #9A1900">&lt;!-- #10 reset posIncrement because somtimes synonym expansion causes position bumps;</span></span>
 <span style="font-style: italic"><span style="color: #9A1900">            range="1,100" ensures that we skip the first token --&gt;</span></span>
-<span style="font-style: italic"><span style="color: #9A1900">        &lt;filter class="solr.analysis.ResetFilterFactory" posIncrement="0" range="1,100" /&gt;</span></span>
+        <span style="font-weight: bold"><span style="color: #0000FF">&lt;filter</span></span> <span style="color: #009900">class</span><span style="color: #990000">=</span><span style="color: #FF0000">"solr.analysis.ResetFilterFactory"</span> <span style="color: #009900">posIncrement</span><span style="color: #990000">=</span><span style="color: #FF0000">"0"</span> <span style="color: #009900">range</span><span style="color: #990000">=</span><span style="color: #FF0000">"1,100"</span> <span style="font-weight: bold"><span style="color: #0000FF">/&gt;</span></span>
 
-<span style="font-style: italic"><span style="color: #9A1900">        &lt;!-- one last name combination run to handle possible hand-curated synonyms</span></span>
-<span style="font-style: italic"><span style="color: #9A1900">        &lt;filter class="custom.AuthorCreateQueryVariationsFilterFactory"</span></span>
-<span style="font-style: italic"><span style="color: #9A1900">            minNameParts="1" plainSurname="true" addShortenedMultiName="true"</span></span>
-<span style="font-style: italic"><span style="color: #9A1900">            addWildcards="false" lookAtPayloadForOrigAuthor="false" /&gt;</span></span>
+        <span style="font-style: italic"><span style="color: #9A1900">&lt;!-- #11 one last name combination run to handle possible hand-curated synonyms --&gt;</span></span>
+        <span style="font-weight: bold"><span style="color: #0000FF">&lt;filter</span></span> <span style="color: #009900">class</span><span style="color: #990000">=</span><span style="color: #FF0000">"custom.AuthorCreateQueryVariationsFilterFactory"</span>
+            <span style="color: #009900">minNameParts</span><span style="color: #990000">=</span><span style="color: #FF0000">"1"</span> <span style="color: #009900">plainSurname</span><span style="color: #990000">=</span><span style="color: #FF0000">"true"</span> <span style="color: #009900">addShortenedMultiName</span><span style="color: #990000">=</span><span style="color: #FF0000">"true"</span>
+            <span style="color: #009900">addWildcards</span><span style="color: #990000">=</span><span style="color: #FF0000">"false"</span> <span style="color: #009900">lookAtPayloadForOrigAuthor</span><span style="color: #990000">=</span><span style="color: #FF0000">"false"</span> <span style="font-weight: bold"><span style="color: #0000FF">/&gt;</span></span>
 
-<span style="font-style: italic"><span style="color: #9A1900">        &lt;!-- deal with multiple occurences of the same (can happen because of the overlapping synonyms) --&gt;</span></span>
-<span style="font-style: italic"><span style="color: #9A1900">        &lt;filter class="oal.analysis.miscellaneous.RemoveDuplicatesTokenFilterFactory" /&gt;</span></span>
+        <span style="font-style: italic"><span style="color: #9A1900">&lt;!-- #12 deal with multiple occurences of the same (can happen because of the overlapping synonyms) --&gt;</span></span>
+        <span style="font-weight: bold"><span style="color: #0000FF">&lt;filter</span></span> <span style="color: #009900">class</span><span style="color: #990000">=</span><span style="color: #FF0000">"oal.analysis.miscellaneous.RemoveDuplicatesTokenFilterFactory"</span> <span style="font-weight: bold"><span style="color: #0000FF">/&gt;</span></span>
 
-<span style="font-style: italic"><span style="color: #9A1900">    &lt;/analyzer&gt;</span></span>
-<span style="font-style: italic"><span style="color: #9A1900">&lt;/fieldType&gt;</span></span></tt></pre></div></div>
-<div class="paragraph"><p>Let&#8217;s step through the operations one-by-one. At each step the goal is to continue expanding the query input to maximize the chance of matching either entries in the two synonym lists, or eventually the index itself.</p></div>
+    <span style="font-weight: bold"><span style="color: #0000FF">&lt;/analyzer&gt;</span></span>
+<span style="font-weight: bold"><span style="color: #0000FF">&lt;/fieldType&gt;</span></span></tt></pre></div></div>
 <div class="olist arabic"><ol class="arabic">
 <li>
 <p>
@@ -1180,7 +1181,7 @@ RemoveDuplicatesTokenFilterFactory -  The final step removes duplicate tokens. T
 <img src="images/search_ex_step_7.png" alt="images/search_ex_step_7.png">
 </div>
 </div>
-<div class="paragraph"><p>We now do our 2nd synonym lookup, this time using the list of hand-curated synonyms. These are names that our librarian/cataloger believe are legitimatly synonymous. This example shows that we know "Herman Müller" also at some point published under the name "Hank Müller". It should be noted that this is an optional step. The smallish size of the Astronomy/Astrophysics scholarly community makes this kind of manual curation feasible; your mileage may vary.</p></div>
+<div class="paragraph"><p>We now do our 2nd synonym lookup, this time using the list of hand-curated synonyms. These are names that our librarian/cataloger believe are true synonyms. This example shows that we know "Herman Müller" also at some point published under the name "Hank Müller". It should be noted that this is an optional step. The smallish size of the Astronomy/Astrophysics scholarly community makes this kind of manual curation feasible; your mileage may vary.</p></div>
 <div class="imageblock">
 <div class="content">
 <img src="images/search_ex_step_8.png" alt="images/search_ex_step_8.png">
@@ -1206,8 +1207,8 @@ RemoveDuplicatesTokenFilterFactory -  The final step removes duplicate tokens. T
 <div class="sect3">
 <h4 id="_a_note_on_the_performance_of_synonymfilter">A Note on the Performance of SynonymFilter</h4>
 <div class="paragraph"><p>Since version 4.0, Solr&#8217;s SynonymFilter makes use of the new Finite State Automata (FSA) functionality. Thanks to FSA we can achieve incredibly fast and efficient lookups of author names, even using a dictionaries with millioins of names.</p></div>
-<div class="paragraph"><p>&lt;measurement of the parsing performance, with the 8M name transliteration lookup file?&gt;</p></div>
-<div class="paragraph"><p>&lt;numbers about the memory footprint of the loaded synonym map?&gt;</p></div>
+<div class="paragraph"><p>TBD: &lt;measurement of the parsing performance, with the 8M name transliteration lookup file?&gt;</p></div>
+<div class="paragraph"><p>TBD: &lt;numbers about the memory footprint of the loaded synonym map?&gt;</p></div>
 </div>
 </div>
 <div class="sect2">
@@ -1220,13 +1221,17 @@ http://www.lorenzobettini.it
 http://www.gnu.org/software/src-highlite -->
 <pre><tt><span style="font-weight: bold"><span style="color: #0000FF">&lt;fieldType</span></span> <span style="color: #009900">name</span><span style="color: #990000">=</span><span style="color: #FF0000">"author_type_exact"</span> <span style="color: #009900">class</span><span style="color: #990000">=</span><span style="color: #FF0000">"solr.TextField"</span><span style="font-weight: bold"><span style="color: #0000FF">&gt;</span></span>
     <span style="font-weight: bold"><span style="color: #0000FF">&lt;analyzer</span></span> <span style="color: #009900">type</span><span style="color: #990000">=</span><span style="color: #FF0000">"query"</span><span style="font-weight: bold"><span style="color: #0000FF">&gt;</span></span>
-    <span style="font-style: italic"><span style="color: #9A1900">&lt;!-- similar to "author" field type but</span></span>
-<span style="font-style: italic"><span style="color: #9A1900">    ...</span></span>
-<span style="font-style: italic"><span style="color: #9A1900">    &lt;/analyzer&gt;</span></span>
-<span style="font-style: italic"><span style="color: #9A1900">&lt;/fieldType&gt;</span></span>
-<span style="font-style: italic"><span style="color: #9A1900">...</span></span>
-<span style="font-style: italic"><span style="color: #9A1900">&lt;field name="author_exact" type="author_type_exact" indexed="true" stored="true" multiValued="true" /&gt;</span></span></tt></pre></div></div>
-<div class="paragraph"><p>This approach requires either a custom QueryParser, or at least a minimally etended version of the standard Lucene QueryParser. The parser must choose the appropriate query analyzer based upon the input field type, but then rewrite the query to use the base "author" field index for the actual lookup.</p></div>
+    ...
+    <span style="font-style: italic"><span style="color: #9A1900">&lt;!-- similar to "author" field type, only synonym expansion is deactivated</span></span>
+<span style="font-style: italic"><span style="color: #9A1900">    &lt;filter class="solr.SynonymFilterFactory" synonyms="author_curated.synonyms"</span></span>
+<span style="font-style: italic"><span style="color: #9A1900">            ignoreCase="true" expand="true" tokenizerFactory="solr.KeywordTokenizerFactory" /&gt;</span></span>
+<span style="font-style: italic"><span style="color: #9A1900">     --&gt;</span></span>
+    ...
+    <span style="font-weight: bold"><span style="color: #0000FF">&lt;/analyzer&gt;</span></span>
+<span style="font-weight: bold"><span style="color: #0000FF">&lt;/fieldType&gt;</span></span>
+...
+<span style="font-weight: bold"><span style="color: #0000FF">&lt;field</span></span> <span style="color: #009900">name</span><span style="color: #990000">=</span><span style="color: #FF0000">"author_exact"</span> <span style="color: #009900">type</span><span style="color: #990000">=</span><span style="color: #FF0000">"author_type_exact"</span> <span style="color: #009900">indexed</span><span style="color: #990000">=</span><span style="color: #FF0000">"true"</span> <span style="color: #009900">stored</span><span style="color: #990000">=</span><span style="color: #FF0000">"true"</span> <span style="color: #009900">multiValued</span><span style="color: #990000">=</span><span style="color: #FF0000">"true"</span> <span style="font-weight: bold"><span style="color: #0000FF">/&gt;</span></span></tt></pre></div></div>
+<div class="paragraph"><p>This approach requires either a custom QueryParser, or at least a minimally extended version of the standard Lucene QueryParser. The parser must choose the appropriate query analyzer based upon the input field type, but then rewrite the query to use the base "author" field index for the actual lookup.</p></div>
 <div class="paragraph"><p>For example, the incoming query:</p></div>
 <div class="listingblock">
 <div class="content monospaced">
@@ -1244,14 +1249,14 @@ http://www.gnu.org/software/src-highlite -->
 <div class="sect1">
 <h2 id="_summary">Summary</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>That&#8217;s it! Our recommendation when trying to get your head around a solution such as this is to start from the tests. Write the tests that show as many edge cases as possible that your analyzer chain should be able to handle. Start from the simple or the complex ones, but definitely have all the possible combinations there. (Ours has over two thousand lines and tests over one hundred combinations). This test is extremely helpful and in fact indispensable for the complex parsing. It is almost certain that your requirements will change or be expanded and you will be forced to incorporate new changes. Changing one step, maybe even just one parameter in the chain, can potentially break 50% of your author searches. Last, but not least, you can use the unittests as a reminder of how much hair you once had.</p></div>
+<div class="paragraph"><p>That&#8217;s it! Our recommendation when trying to get your head around a solution such as this is to start from the tests. Write the tests that show as many edge cases as possible that your analyzer chain should be able to handle. Start from the simple or the complex ones, but definitely have all the possible combinations there. (Ours has over two thousand lines and tests over one hundred combinations). This test is extremely helpful and in fact indispensable for the complex parsing. It is almost certain that your requirements will change or be expanded and you will be forced to incorporate new changes. Changing one step, maybe even just one parameter in the chain, can potentially break 50% of your author searches. Last, but not least, the unittests will serve as a gentle reminder of how much hair (if any) you had before starting something <em>sooo simple</em> as name parsing.</p></div>
 </div>
 </div>
 </div>
 <div id="footnotes"><hr></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2013-01-30 17:17:26 EST
+Last updated 2013-02-02 06:34:51 EST
 </div>
 </div>
 </body>
