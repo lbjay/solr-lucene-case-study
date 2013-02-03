@@ -28,6 +28,8 @@ Requirements Overview
 
 - Allow the above rules to interact seamlessly with a set of hand-curated author name synonyms. This list includes synonyms for common mis-spellings as well as changes in author names (e.g., wives taking their husband's last name).
 
+- Allow users to disable some or all of these features to provide various degrees of "exact match" control.
+
 Solution
 --------
 
